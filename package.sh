@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# This script by Jeremy Moles (jeremy@emperorlinux.com) is used for 
+# automatically building the release packages. We can delete it, I guess,
+# if people think it's too ghetto.
+
 MANIFEST="full"
 PKGNAME="cal3d-0.11rc1"
 PKGTYPE="bz2"
@@ -51,25 +55,33 @@ else
 	echo "   -v: be verbose"
 	echo "   -c: only create the pkg directory; do not archive."
 	echo "   -p: only archive the pkg directory; do not recreate."
+	echo 
+	echo "Examples:"
+	echo 
+	echo "   ./package -vn cal3d-0.11rc1 tags/release-0_11rc1_0"
+	echo "   ./package -pn cal3d-0.11 trunk"
+	echo
+	echo "...or however you want to do it. Naturally, it doesn't make"
+	echo "much sense to use both -c and -p in the same invocation."
 
 	exit 1
 fi
 
 shift $((${OPTIND} - 1))
 
-if [ -n "${MANIFEST}" -a -f "${MANIFEST}.manifest" ]; then
+if [ -n "${MANIFEST}" -a -f "${MANIFEST}.manifest" -a -d "${1}" ]; then
 	CAL3D_FILES="$(cat "${MANIFEST}.manifest")"
 
 	if [ -z "${PKGONLY}" ]; then
+		[ -n "${VERBOSE}" ] && echo "Creating package directory: ${PKGNAME}"
+	
 		for F in ${CAL3D_FILES}; do
 			ADD="${1}/cal3d"
 			SRC="${ADD}/${F}"
 			DIR="$(dirname "${SRC/${ADD}/${PKGNAME}}")"
 		
 			if [ -f "${SRC}" ]; then	
-				if [ -n "${VERBOSE}" ]; then
-					echo "COPYING: ${SRC}"
-				fi
+				[ -n "${VERBOSE}" ] && echo "COPYING: ${SRC}"
 
 				if [ ! -d "${DIR}" ]; then
 					mkdir -p "${DIR}"
@@ -87,20 +99,30 @@ if [ -n "${MANIFEST}" -a -f "${MANIFEST}.manifest" ]; then
 	fi
 
 	if [ -z "${CREATEONLY}" -a -d "${PKGNAME}" ]; then
+		[ -n "${VERBOSE}" ] && echo -n "Creating package: "
+	
 		case "${PKGTYPE}" in
 			"bz2")
+				[ -n "${VERBOSE}" ] && echo "${PKGNAME}.tbz2"
+
 				tar -cjf "${PKGNAME}.tbz2" "${PKGNAME}"
 			;;
 
 			"gz")
+				[ -n "${VERBOSE}" ] && echo "${PKGNAME}.gz"
+				
 				tar -czf "${PKGNAME}.tgz" "${PKGNAME}"
 			;;
 
 			"zip")
+				[ -n "${VERBOSE}" ] && echo "${PKGNAME}.zip"
+				
 				zip -qr "${PKGNAME}.zip" "${PKGNAME}"
 			;;
 
 			*)
+				[ -n "${VERBOSE}" ] && echo "???"
+			
 				echo "Unknown PKGTYPE ${PKGTYPE}; Skipping."
 			;;
 		esac
@@ -110,7 +132,9 @@ if [ -n "${MANIFEST}" -a -f "${MANIFEST}.manifest" ]; then
 	fi
 	
 else
-	echo "nope"
+	echo "It looks like you've passed a bad manifest name or that the directory"
+	echo "you specified doesn't exist. Please check both of these things and"
+	echo "re-run this script properly."
 
 	exit 2
 fi
