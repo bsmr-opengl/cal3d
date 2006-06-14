@@ -81,6 +81,8 @@ src/cal3d/animation.cpp
 src/cal3d/animation_action.h
 src/cal3d/Makefile.am
 src/cal3d/coreanimation.h
+src/cal3d/coretrack.cpp
+src/cal3d/coretrack.h
 src/SConscript
 src/Makefile.am
 cal3d.dsw

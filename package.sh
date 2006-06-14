@@ -5,7 +5,7 @@
 # if people think it's too ghetto.
 
 MANIFEST="full"
-PKGNAME="cal3d-0.11rc1"
+PKGNAME="cal3d-0.11rc2"
 PKGTYPE="bz2"
 VERBOSE=""
 CREATEONLY=""
@@ -105,13 +105,13 @@ if [ -n "${MANIFEST}" -a -f "${MANIFEST}.manifest" -a -d "${1}" ]; then
 			"bz2")
 				[ -n "${VERBOSE}" ] && echo "${PKGNAME}.tbz2"
 
-				tar -cjf "${PKGNAME}.tbz2" "${PKGNAME}"
+				tar -cjf "${PKGNAME}.tar.bz2" "${PKGNAME}"
 			;;
 
 			"gz")
 				[ -n "${VERBOSE}" ] && echo "${PKGNAME}.gz"
 				
-				tar -czf "${PKGNAME}.tgz" "${PKGNAME}"
+				tar -czf "${PKGNAME}.tar.gz" "${PKGNAME}"
 			;;
 
 			"zip")
@@ -138,3 +138,5 @@ else
 
 	exit 2
 fi
+
+#scp FILES cubicool@download.gna.org:/upload/cal3d/
