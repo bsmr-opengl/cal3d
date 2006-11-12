@@ -1,0 +1,146 @@
+<!-- jeremy@emperorlinux.com did this. Yikes. -->
+<html><head><title>Cal3d</title></head>
+<style>
+body {
+	background: #00004d;
+}
+div.main {
+	color: #555;
+	font-family: verdana;
+}
+div.txt {
+	text-align: justify;
+}
+div.svn {
+	width: 100%;
+	color: #777;
+	text-align: right;	
+}
+div.header {
+	font-weight: bold;
+	color: #999;
+	border-bottom: solid 1px #555;
+
+}
+div.email {
+	width: 100%;
+	color: #777;
+	text-align: right;
+}
+a {
+	color: #999;
+}
+</style>
+<body>
+<div class="main">
+                  <p>                     <a class="reallink"
+ href="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_promo.jpg"><img
+ src="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_promo_thumb.jpg" width="128" height="96"
+ hspace="0" vspace="0">
+                        </a>.                     <a class="reallink"
+ href="http://download.gna.org/cal3d/htdocs/screenshots/cally_stages.jpg"><img
+ src="http://download.gna.org/cal3d/htdocs/screenshots/cally_stages_thumb.jpg" width="128" height="96"
+ hspace="0" vspace="0">
+                        </a>.                     <a class="reallink"
+ href="http://download.gna.org/cal3d/htdocs/screenshots/cally_poses.jpg"><img
+ src="http://download.gna.org/cal3d/htdocs/screenshots/cally_poses_thumb.jpg" width="128" height="96"
+ hspace="0" vspace="0">
+                        </a>.                                                                                             
+                                              
+                     <a class="reallink"
+ href="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_lod.jpg"><img
+ src="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_lod_thumb.jpg" width="128" height="96"
+ hspace="0" vspace="0">
+                        </a>.                     <a class="reallink"
+ href="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_exporter.jpg"><img
+ src="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_exporter_thumb.jpg" width="128" height="96"
+ hspace="0" vspace="0">
+                        </a>.                     <a class="reallink"
+ href="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_iotd.jpg"><img
+ src="http://download.gna.org/cal3d/htdocs/screenshots/cal3d_iotd_thumb.jpg" width="128" height="96"
+ hspace="0" vspace="0">
+                        </a>.                     </p>
+                                                                        
+<div class="txt">
+<div class="header">What is Cal3D?</div>
+<p>
+Cal3D is a skeletal based 3D character animation library written in C++ in
+a platform-/graphic API-independent way. Originally designed to be used in a
+3D client for <a href="http://www.worldforge.org">Worldforge</a>, it evolved
+into a stand-alone product which can be used in many different kinds of projects.
+It supports combining animations and actions through a "mixer" interface, and work
+is currently underway to integrate morph targets (interpolating between one mesh
+and another, using the same vertex sequence) easily into the system.
+<p>
+<div class="header">Download</div>
+<p>
+<a href="http://download.gna.org/cal3d/sources/cal3d-0.11.0.tar.gz">
+cal3d-0.11.0 sources (latest stable version)
+<p>
+<a href="http://download.gna.org/cal3d/sources/cally-2.11.0.tar.gz">
+cally interactive demo for cal3d-0.11.0
+</a><br>
+<a href="http://download.gna.org/cal3d/sources/?M=D">
+More downloads</a> (3d models, tools based on cal3d etc.)
+<br>
+If using a GNU/Linux distribution, there is a good chance a <a href="http://download.gna.org/cal3d/html/">binary package</a> already
+exists.
+</a>
+<p>
+
+<div class="header">Community links</div>
+<p>
+<a href="https://gna.org/bugs/?func=additem&group=cal3d">Report a bug</a>,
+<a href="https://mail.gna.org/listinfo/cal3d-devel/">mailing list</a> and 
+<a href="http://gna.org/projects/cal3d/">cal3d development forge.</a>.
+<br>
+
+<div class="header">June 29, 2006 : cal3d 0.11 released</div>
+<p>
+<ul>
+  <li> Make the list of the root bones a vector. So the root bones can be acceded 
+    in C wrapper.
+  <li> Add some missing function to access to private variables.
+  <li> Add cal3d_converter to the default distribution with manual page and file format
+    description (tools subdirectory is therefore removed)
+  <li> The destructor of CalModel is now virtual.
+  <li> Made CalModel noncopyable to prevent shallow pointer copying bugs.
+  <li> Use a RefCounted base class and RefPtr smart pointers to hold RefCounted objects.
+  <li> Make CalModel destructor nonvirtual 
+  <li> Improve bounding boxes calculation performance.
+  <li> Update the C wrapper.
+  <li> Add some function to rotate around axis during the loading.
+  <li> When a cycle animation is played, ensure that the last post equals the first pose.
+  <li> Extended callback mechanism to pass user data directly instead of making
+    the callback query for it.  This means the callback executable does not have
+    to link with cal3d.lib and makes many things simpler in CS context.
+    Also worked around a bug (feature?) in the mixer which thinks that
+    m_AnimDuration is always 0 for AnimActions.  Now the callback uses the
+    internal time counter of the animation, which is probably more consistent
+    anyway.
+  <li> VC6 and automake fixes. Removed old variables from src/cal3d/Makefile.am.
+  <li> 64bit compatibility fixes.
+  <li> Patch for reading correctly raw texture on a Big endian cpu (for Mac).
+  <li> Fixed bug in updating current anim time when time factor is set to negative.
+  <li> Correction in max exporters.
+  <li> Update the glew (The OpenGL Extension Wrangler Library).
+  <li> Made the refcounted classes derive from RefCounted, and manage
+    their lifetimes with RefPtr smart pointers.
+  <li> Put TinyXML into the cal3d namespace so it doesn't conflict with other
+    libraries linking with their own TinyXML.
+  <li> Fixed bug in updating current anim time when time factor is set to negative,
+    which resuilted in anim times like -32 instead of between 0 and 2 seconds, 
+    for example.  This threw the bone extrapolations way off and made the model
+    look like garbage until the anim time got back in the right zone. (Keith Fulton)
+  <li> GNU/Linux compilation / packaging fixes (-DCAL_16BIT_INDICES is included if
+    relevant in the .pc)
+  <li> Upgraded the guide
+</ul>
+<div class="header">Documentation</div>
+<p>
+<a href="http://download.gna.org/cal3d/documentation/guide/">User Guide</a></br>
+<a href="http://download.gna.org/cal3d/documentation/api/html/">API Reference & FAQ</a></br>
+<a href="http://download.gna.org/cal3d/documentation/modeling/tutorial.html">Modeling with 3DSMax</a></br>
+<p>
+</body>
+</html>
