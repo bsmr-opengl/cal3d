@@ -5,7 +5,7 @@
 # if people think it's too ghetto.
 
 MANIFEST="full"
-PKGNAME="cal3d-0.11rc2"
+PKGNAME="cal3d-0.11.0"
 PKGTYPE="bz2"
 VERBOSE=""
 CREATEONLY=""
