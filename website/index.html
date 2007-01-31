@@ -8,12 +8,16 @@
 a {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	text-decoration: none;
-	font-size: 12px;
+	font-size: 11px;
 	font-style: normal;
 	font-weight: normal;
 	font-variant: normal;
 	text-transform: uppercase;
 	color: #666666;
+}
+a:hover {
+	color: #8A1819;
+	text-decoration: underline;
 }
 strong {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -28,14 +32,18 @@ strong {
 }
 table {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	color: #000000;
+	font-size: 11px;
+	color: #333333;
+	width: 700px;
+	text-align: justify;
 }
 hr {
 	border: 0px;
 	color: #AAAAAA;
 	background-color: #AAAAAA;
 	height: 1px;
+	margin-top: 20px;
+	margin-bottom: 20px;
 }
 -->
 </style>
@@ -43,83 +51,71 @@ hr {
 
 <body bgcolor="#565656" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
 <table width="800" border="0" align="center" cellpadding="0" cellspacing="0">
-  <tr>
-    <td width="800" height="127"><img src="img/top.jpg" width="800" height="127"></td>
-  </tr>
+<tr><td width="800" height="127"><img src="img/top.jpg" width="800" height="127"></td></tr>
 
-  <tr>
-    <td background="img/back.jpg"><table width="800" border="0" cellspacing="30" cellpadding="0">
-        <tr> 
-          <td><p><strong>What is Cal3D?</strong><br>
-              Cal3D is a skeletal based 3D character animation library written 
-              in C++ in a platform-/graphic API-independent way. Originally designed 
-              to be used in a 3D client for Worldforge, it evolved into a stand-alone 
-              product which can be used in many different kinds of projects. It 
-              supports combining animations and actions through a &quot;mixer&quot; 
-              interface, and work is currently underway to integrate morph targets 
-              (interpolating between one mesh and another, using the same vertex 
-              sequence) easily into the system.</p>
-            <hr>
-            <strong>Screenshots & Videos<br>
-              <a href="http://download.gna.org/cal3d/skeleton-high.avi"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">Skeleton/OSG - High Quality (6.1MB)</a><br>
-              <a href="http://download.gna.org/cal3d/skeleton-low.avi"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">Skeleton/OSG - Low Quality (1.8MB)</a><br>
-            </strong> 
-            <hr>
-            <p><strong>Download</strong><br>
-              <a href="http://download.gna.org/cal3d/sources/cal3d-0.11.0.tar.gz"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">cal3d-0.11.0 
-              sources (latest stable version)</a><br>
-              <a href="http://download.gna.org/cal3d/sources/cally-2.11.0.tar.gz"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">cally 
-              interactive demo for cal3d-0.11.0 </a><br>
-              <a href="http://download.gna.org/cal3d/sources/?M=D"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">More 
-              downloads (3d models, tools based on cal3d etc.) </a><br>
-
-              If using a GNU/Linux distribution, there is a good chance a
-	      <a href="http://download.gna.org/cal3d/html/">binary package</a> already exists.</p>
-            <hr>
-            <strong>Documentation</strong><br>
-            <a href="http://download.gna.org/cal3d/documentation/guide/">User Guide</a><br>
-            <a href="http://download.gna.org/cal3d/documentation/api/html/">API Reference &amp; FAQ</a><br>
-            <a href="http://download.gna.org/cal3d/documentation/modeling/tutorial.html">Modeling with 3DSMax</a> <br>
-            <br> 
-            <hr>
-            <strong>Community</strong><br>
-            <a href="https://gna.org/bugs/?func=additem&group=cal3d">Report a bug</a><br>
-            <a href="https://mail.gna.org/listinfo/cal3d-devel/">Mailing list</a><br>
-            <a href="http://gna.org/projects/cal3d/">Cal3d development forge</a><br>
-
-        </tr>
-      </table></td>
-  </tr>
-  <tr>
-    <td width="800" height="126"><img src="img/bot.jpg" width="800" height="126"></td>
-  </tr>
+<tr><td background="img/back.jpg"><table width="800" border="0" cellspacing="30" cellpadding="0">
+<tr><td>
+<strong>Are You Guys Still Alive?!</strong><br>
+Yes, yes, of course we are! We've all just been very busy lately and haven't
+had a chance to make much happen. However, James Walker has made a few changes
+in the subversion trunk (which will appear in Cal3D 0.12) that should improve
+the fluidity of animations, and Palle Raabjerg, Jeremy Moles, and Jean-Baptiste
+Lamy have rewritten the Blender exporter--though much works still remains. Perhaps
+2007 will be a better year for releases, improvements, and fixes all around!
+<b>Also, don't forget to join us in #cal3d on Freenode!</b>
+<p><strong>What is Cal3D?</strong><br>
+Cal3D is a skeletal based 3D character animation library written 
+in C++ in a platform-/graphic API-independent way. Originally designed 
+to be used in a 3D client for Worldforge, it evolved into a stand-alone 
+product which can be used in many different kinds of projects. It 
+supports combining animations and actions through a &quot;mixer&quot; 
+interface, and work is currently underway to integrate morph targets 
+(interpolating between one mesh and another, using the same vertex 
+ sequence) easily into the system.</p>
+<hr>
+<strong>Screenshots & Videos<br>
+<a href="http://download.gna.org/cal3d/skeleton-high.avi"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">Skeleton/OSG - High Quality (6.1MB) [h.264]</a><br>
+<a href="http://download.gna.org/cal3d/skeleton-low.avi"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">Skeleton/OSG - Low Quality (1.8MB) [h.264]</a><br>
+<a href="http://download.gna.org/cal3d/skeleton-win-high.avi"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">Skeleton/OSG - High Quality (6.4MB) [MPEG4]</a><br>
+<a href="http://download.gna.org/cal3d/skeleton-low.avi"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">Skeleton/OSG - Low Quality (900KB) [MPEG4]</a><br>
+</strong> 
+<hr>
+<p><strong>Download</strong><br>
+<a href="http://download.gna.org/cal3d/sources/cal3d-0.11.0.tar.gz"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">
+cal3d-0.11.0 sources (latest stable version)</a><br>
+<a href="http://download.gna.org/cal3d/sources/cally-2.11.0.tar.gz"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">
+cally interactive demo for cal3d-0.11.0 </a><br>
+<a href="http://download.gna.org/cal3d/sources/?M=D"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">
+More downloads (3d models, tools based on cal3d etc.) </a><br>
+<a href="http://download.gna.org/cal3d/html/"><img src="img/download.gif" width="27" height="24" hspace="3" border="0" align="absmiddle">
+Binary Packages</a><p>
+<hr>
+<p><strong>Subversion</strong><br>
+You can stay up-to-date with Cal3D's latest code using Subversion! Please keep in mind that
+while every attempt is made to not commit changes that wholly break the Cal3D library, we
+are a multi-developer project and accidents do happen. Let us know if we've missed anything
+using IRC or our mailing lists. We can usually fix any small bugs right away.
+<p>
+<b>svn co http://svn.gna.org/svn/cal3d/trunk cal3d</b>
+<p>
+<hr>
+<strong>Documentation</strong><br>
+<a href="http://download.gna.org/cal3d/documentation/guide/">User Guide</a><br>
+<a href="http://download.gna.org/cal3d/documentation/api/html/">API Reference &amp; FAQ</a><br>
+<a href="http://download.gna.org/cal3d/documentation/modeling/tutorial.html">Modeling with 3DSMax</a>
+<hr>
+<strong>Community</strong><br>
+<a href="https://gna.org/bugs/?func=additem&group=cal3d">Report a bug</a><br>
+<a href="https://mail.gna.org/listinfo/cal3d-devel/">General mailing list</a><br>
+<a href="https://mail.gna.org/listinfo/cal3d-commits/">SVN commits mailing list</a><br>
+<a href="http://gna.org/projects/cal3d/">Cal3d development forge</a><br>
+</tr>
+</table></td>
+</tr>
+<tr>
+<td width="800" height="126"><img src="img/bot.jpg" width="800" height="126"></td>
+</tr>
 </table>
-
-<!--
-* Make the list of the root bones a vector. So the root bones can be acceded in C wrapper.
-* Add some missing function to access to private variables.
-* Add cal3d_converter to the default distribution with manual page and file format description (tools subdirectory is therefore removed)
-* The destructor of CalModel is now virtual.
-* Made CalModel noncopyable to prevent shallow pointer copying bugs.
-* Use a RefCounted base class and RefPtr smart pointers to hold RefCounted objects.
-* Make CalModel destructor nonvirtual
-* Improve bounding boxes calculation performance.
-* Update the C wrapper.
-* Add some function to rotate around axis during the loading.
-* When a cycle animation is played, ensure that the last post equals the first pose.
-* Extended callback mechanism to pass user data directly instead of making the callback query for it. This means the callback executable does not have to link with cal3d.lib and makes many things simpler in CS context. Also worked around a bug (feature?) in the mixer which thinks that m_AnimDuration is always 0 for AnimActions. Now the callback uses the internal time counter of the animation, which is probably more consistent anyway.
-* VC6 and automake fixes. Removed old variables from src/cal3d/Makefile.am.
-* 64bit compatibility fixes.
-* Patch for reading correctly raw texture on a Big endian cpu (for Mac).
-* Fixed bug in updating current anim time when time factor is set to negative.
-* Correction in max exporters.
-* Update the glew (The OpenGL Extension Wrangler Library).
-* Made the refcounted classes derive from RefCounted, and manage their lifetimes with RefPtr smart pointers.
-* Put TinyXML into the cal3d namespace so it doesn't conflict with other libraries linking with their own TinyXML.
-* Fixed bug in updating current anim time when time factor is set to negative, which resuilted in anim times like -32 instead of between 0 and 2 seconds, for example. This threw the bone extrapolations way off and made the model look like garbage until the anim time got back in the right zone. (Keith Fulton)
-* GNU/Linux compilation / packaging fixes (-DCAL_16BIT_INDICES is included if relevant in the .pc)
-* Upgraded the guide
--->
 
 </body>
 </html>
