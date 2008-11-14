@@ -1,5 +1,5 @@
 //****************************************************************************//
-// corekeyframe.cpp                                                           //
+// coreMorphKeyframe.cpp                                                           //
 // Copyright (C) 2001, 2002 Bruno 'Beosil' Heidelberger                       //
 //****************************************************************************//
 // This library is free software; you can redistribute it and/or modify it    //
@@ -16,10 +16,7 @@
 // Includes                                                                   //
 //****************************************************************************//
 
-#include "cal3d/corekeyframe.h"
-
-static unsigned int MyNumCalCoreKeyframes = 0;
-static unsigned int MyNumCalCoreKeyframeBytes = 0;
+#include "cal3d/coreMorphKeyframe.h"
 
  /*****************************************************************************/
 /** Constructs the core keyframe instance.
@@ -27,24 +24,10 @@ static unsigned int MyNumCalCoreKeyframeBytes = 0;
   * This function is the default constructor of the core keyframe instance.
   *****************************************************************************/
 
-CalCoreKeyframe::CalCoreKeyframe()
+CalCoreMorphKeyframe::CalCoreMorphKeyframe()
   : m_time(0.0f)
 {
-  MyNumCalCoreKeyframes++;
-  MyNumCalCoreKeyframeBytes += sizeof( CalCoreKeyframe );
 }
-
-unsigned int CalCoreKeyframe::numCalCoreKeyframes() { return MyNumCalCoreKeyframes; }
-unsigned int CalCoreKeyframe::numCalCoreKeyframeBytes() { return MyNumCalCoreKeyframeBytes; }
-
-
-unsigned int
-CalCoreKeyframe::size()
-{
-  unsigned int r = sizeof( CalCoreKeyframe );
-  return r;
-}
-
 
  /*****************************************************************************/
 /** Destructs the core keyframe instance.
@@ -52,10 +35,8 @@ CalCoreKeyframe::size()
   * This function is the destructor of the core keyframe instance.
   *****************************************************************************/
 
-CalCoreKeyframe::~CalCoreKeyframe()
+CalCoreMorphKeyframe::~CalCoreMorphKeyframe()
 {
-  MyNumCalCoreKeyframes--;
-  MyNumCalCoreKeyframeBytes -= sizeof( CalCoreKeyframe );
 }
 
  /*****************************************************************************/
@@ -65,10 +46,10 @@ CalCoreKeyframe::~CalCoreKeyframe()
   *
   * @return One of the following values:
   *         \li \b true if successful
-  *         \li \b false if an error happened
+  *         \li \b false if an error happend
   *****************************************************************************/
 
-bool CalCoreKeyframe::create()
+bool CalCoreMorphKeyframe::create()
 {
   return true;
 }
@@ -80,47 +61,34 @@ bool CalCoreKeyframe::create()
   * frees all allocated memory.
   *****************************************************************************/
 
-void CalCoreKeyframe::destroy()
+void CalCoreMorphKeyframe::destroy()
 {
 }
 
  /*****************************************************************************/
-/** Returns the rotation.
+/** Returns the time.
   *
-  * This function returns the rotation of the core keyframe instance.
+  * This function returns the time of the core keyframe instance.
   *
-  * @return The rotation as quaternion.
+  * @return The time in seconds.
   *****************************************************************************/
 
-const CalQuaternion& CalCoreKeyframe::getRotation() const
+float CalCoreMorphKeyframe::getTime() const
 {
-  return m_rotation;
+  return m_time;
 }
 
  /*****************************************************************************/
-/** Returns the translation.
+/** Returns the weight.
   *
-  * This function returns the translation of the core keyframe instance.
+  * This function returns the weight of the core keyframe instance.
   *
-  * @return The translation as vector.
+  * @return The weight as vector.
   *****************************************************************************/
 
-const CalVector& CalCoreKeyframe::getTranslation() const
+float CalCoreMorphKeyframe::getWeight() const
 {
-  return m_translation;
-}
-
- /*****************************************************************************/
-/** Sets the rotation.
-  *
-  * This function sets the rotation of the core keyframe instance.
-  *
-  * @param rotation The rotation as quaternion.
-  *****************************************************************************/
-
-void CalCoreKeyframe::setRotation(const CalQuaternion& rotation)
-{
-  m_rotation = rotation;
+  return m_weight;
 }
 
  /*****************************************************************************/
@@ -131,22 +99,22 @@ void CalCoreKeyframe::setRotation(const CalQuaternion& rotation)
   * @param rotation The time in seconds.
   *****************************************************************************/
 
-void CalCoreKeyframe::setTime(float time)
+void CalCoreMorphKeyframe::setTime(float time)
 {
   m_time = time;
 }
 
  /*****************************************************************************/
-/** Sets the translation.
+/** Sets the weight.
   *
-  * This function sets the translation of the core keyframe instance.
+  * This function sets the weight of the core keyframe instance.
   *
-  * @param rotation The translation as vector.
+  * @param weight float
   *****************************************************************************/
 
-void CalCoreKeyframe::setTranslation(const CalVector& translation)
+void CalCoreMorphKeyframe::setWeight(float weight)
 {
-  m_translation = translation;
+  m_weight = weight;
 }
 
 //****************************************************************************//

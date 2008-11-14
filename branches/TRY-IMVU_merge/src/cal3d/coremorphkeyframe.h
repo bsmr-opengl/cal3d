@@ -1,5 +1,5 @@
 //****************************************************************************//
-// corekeyframe.h                                                             //
+// coreMorphKeyframe.h                                                             //
 // Copyright (C) 2001, 2002 Bruno 'Beosil' Heidelberger                       //
 //****************************************************************************//
 // This library is free software; you can redistribute it and/or modify it    //
@@ -8,8 +8,8 @@
 // your option) any later version.                                            //
 //****************************************************************************//
 
-#ifndef CAL_COREKEYFRAME_H
-#define CAL_COREKEYFRAME_H
+#ifndef CAL_COREMORPHKEYFRAME_H
+#define CAL_COREMORPHKEYFRAME_H
 
 //****************************************************************************//
 // Includes                                                                   //
@@ -28,45 +28,27 @@
 /** The core keyframe class.
   *****************************************************************************/
 
-class CAL3D_API CalCoreKeyframe
+class CAL3D_API CalCoreMorphKeyframe
 {
 // member variables
 protected:
   float m_time;
-  CalVector m_translation;
-  CalQuaternion m_rotation;
+  float m_weight;
 
-public:
 // constructors/destructor
-  CalCoreKeyframe();
-  virtual ~CalCoreKeyframe();
+public:
+  CalCoreMorphKeyframe();
+  virtual ~CalCoreMorphKeyframe();
 
 // member functions
 public:
-  static unsigned int numCalCoreKeyframes();
-  static unsigned int numCalCoreKeyframeBytes();
-
   bool create();
-  unsigned int size();
   void destroy();
-  const CalQuaternion& getRotation() const;
-
-  /*****************************************************************************/
-  /** Returns the time.
-  *
-  * This function returns the time of the core keyframe instance.
-  *
-  * @return The time in seconds.
-  *****************************************************************************/
-  inline float getTime() const
-  {
-	  return m_time;
-  }
-
-  const CalVector& getTranslation() const;
-  void setRotation(const CalQuaternion& rotation);
+  float getTime() const;
   void setTime(float time);
-  void setTranslation(const CalVector& translation);
+
+  float getWeight() const;
+  void setWeight(float);
 };
 
 #endif
