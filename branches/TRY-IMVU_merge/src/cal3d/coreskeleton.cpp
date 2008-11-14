@@ -413,7 +413,7 @@ CalCoreSkeleton::setSceneAmbientColor( CalVector const & color )
 
 
 void
-CalCoreSkeleton::getSceneAmbientColor( CalVector & color )
+CalCoreSkeleton::getSceneAmbientColor( CalVector & color ) const
 {
   color = m_sceneAmbientColor;
 }

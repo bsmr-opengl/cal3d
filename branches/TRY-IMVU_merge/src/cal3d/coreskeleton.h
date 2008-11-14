@@ -43,9 +43,9 @@ public:
   const std::vector<CalCoreBone *>& getVectorCoreBone() const;
   void calculateBoundingBoxes(CalCoreModel *pCoreModel);
   void scale(float factor);
-  unsigned int getNumCoreBones() { return ( unsigned int ) m_vectorCoreBone.size(); }
+  unsigned int getNumCoreBones() const { return ( unsigned int ) m_vectorCoreBone.size(); }
   void setSceneAmbientColor( CalVector const & color );
-  void getSceneAmbientColor( CalVector & color );
+  void getSceneAmbientColor( CalVector & color ) const;
 
 private:
   std::vector<CalCoreBone *>   m_vectorCoreBone;
