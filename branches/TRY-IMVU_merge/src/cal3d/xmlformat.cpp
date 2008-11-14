@@ -352,26 +352,37 @@ CalCoreSkeletonPtr CalLoader::loadXmlCoreSkeleton(cal3d::TiXmlDocument & doc)
   std::string strFilename = "";
 
   cal3d::TiXmlNode* node;
-  cal3d::TiXmlElement*header = doc.FirstChildElement();
-  if(!header || stricmp(header->Value(),"HEADER")!=0)
+  cal3d::TiXmlElement* firstChild = doc.FirstChildElement();
+  if(!firstChild)
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
       return 0;
-  }  
-  
-  if(stricmp(header->Attribute("MAGIC"),Cal::SKELETON_XMLFILE_EXTENSION)!=0)
-  {
-    CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
-        return false;
-  }    
-  
-  if(atoi(header->Attribute("VERSION")) < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
-  {
-    CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
-        return false;
   }
 
-  cal3d::TiXmlElement*skeleton = header->NextSiblingElement();
+  cal3d::TiXmlElement* skeleton = NULL;
+
+  if(stricmp(firstChild->Value(),"HEADER")==0)
+  {
+     if(stricmp(firstChild->Attribute("MAGIC"),Cal::SKELETON_XMLFILE_EXTENSION)!=0)
+     {
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
+        return false;
+     }    
+
+     if(atoi(firstChild->Attribute("VERSION")) < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
+     {
+        CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
+        return false;
+     }
+
+     skeleton = firstChild->NextSiblingElement();
+  }
+  else
+  {
+     skeleton = firstChild;
+  }
+
+  //cal3d::TiXmlElement*skeleton = header->NextSiblingElement();
   if(!skeleton || stricmp(skeleton->Value(),"SKELETON")!=0)
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
