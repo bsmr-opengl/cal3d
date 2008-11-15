@@ -716,29 +716,40 @@ CalCoreAnimationPtr CalLoader::loadXmlCoreAnimation(cal3d::TiXmlDocument &doc, C
   const std::string strFilename = "";
   cal3d::TiXmlNode* node;
 
-  cal3d::TiXmlElement*header = doc.FirstChildElement();
-  if(!header || stricmp(header->Value(),"HEADER")!=0)
+  cal3d::TiXmlElement* firstChild = doc.FirstChildElement();
+  if(!firstChild)
   {
     str.clear();
-    str << "Header element is " << (header ? header->Value() : "<unknown>");
+    str << "Header element is " << (firstChild ? firstChild->Value() : "<unknown>");
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, str.str());
     return 0;
   }
   
-  
-  if(stricmp(header->Attribute("MAGIC"),Cal::ANIMATION_XMLFILE_EXTENSION)!=0)
+  cal3d::TiXmlElement* animation = NULL;
+
+  if (stricmp(firstChild->Value(),"HEADER")==0)
   {
-    CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
+     if(stricmp(firstChild->Attribute("MAGIC"),Cal::ANIMATION_XMLFILE_EXTENSION)!=0)
+     {
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
         return 0;
-  }    
-  
-  if(atoi(header->Attribute("VERSION")) < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
+     }    
+
+     if(atoi(firstChild->Attribute("VERSION")) < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
+     {
+        CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
+        return 0;
+     }
+
+     animation = firstChild->NextSiblingElement();
+  }
+  else
   {
-    CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
-        return 0;
+     animation = firstChild;
   }
 
-  cal3d::TiXmlElement*animation = header->NextSiblingElement();
+  
+
   if(!animation || stricmp(animation->Value(),"ANIMATION")!=0)
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
@@ -1121,30 +1132,40 @@ CalCoreMeshPtr CalLoader::loadXmlCoreMesh(cal3d::TiXmlDocument & doc)
 
   cal3d::TiXmlNode* node;
 
-  cal3d::TiXmlElement*header = doc.FirstChildElement();
-  if(!header || stricmp(header->Value(),"HEADER")!=0)
+  cal3d::TiXmlElement* firstChild = doc.FirstChildElement();
+  if(!firstChild)
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
         return 0;
   }
-   
   
-  if(stricmp(header->Attribute("MAGIC"),Cal::MESH_XMLFILE_EXTENSION)!=0)
-  {
-    CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
-        return 0;
-  }    
+  cal3d::TiXmlElement* mesh = NULL;
+  bool hasVertexColors = false;
 
-  int version = atoi(header->Attribute("VERSION"));
-  if(version < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
+  if (stricmp(firstChild->Value(),"HEADER")==0)
   {
-    CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
+     if(stricmp(firstChild->Attribute("MAGIC"),Cal::MESH_XMLFILE_EXTENSION)!=0)
+     {
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
         return 0;
+     }    
+
+     int version = atoi(firstChild->Attribute("VERSION"));
+     if(version < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
+     {
+        CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
+        return 0;
+     }
+
+     hasVertexColors = (version >= Cal::FIRST_FILE_VERSION_WITH_VERTEX_COLORS);
+
+     mesh = firstChild->NextSiblingElement();
   }
-
-  bool hasVertexColors = (version >= Cal::FIRST_FILE_VERSION_WITH_VERTEX_COLORS);
-
-  cal3d::TiXmlElement*mesh = header->NextSiblingElement();
+  else
+  {
+     mesh = firstChild;
+  }
+  
   if(!mesh || stricmp(mesh->Value(),"MESH")!=0)
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
@@ -1685,29 +1706,38 @@ CalCoreMaterialPtr CalLoader::loadXmlCoreMaterial(cal3d::TiXmlDocument & doc)
   const std::string strFilename = "";
   cal3d::TiXmlNode* node;
 
-  cal3d::TiXmlElement*header = doc.FirstChildElement();
-  if(!header || stricmp(header->Value(),"HEADER")!=0)
+  cal3d::TiXmlElement* firstChild = doc.FirstChildElement();
+  if(!firstChild)
   {
     str.clear();
-    str << "Header element is " << (header ? header->Value() : "<unknown>");
+    str << "Header element is " << (firstChild ? firstChild->Value() : "<unknown>");
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, str.str());
     return 0;
   }
+
+  cal3d::TiXmlElement* material = NULL;
   
-  
-  if(stricmp(header->Attribute("MAGIC"),Cal::MATERIAL_XMLFILE_EXTENSION)!=0)
+  if (stricmp(firstChild->Value(),"HEADER")==0)
   {
-    CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
-    return 0;
-  }    
-  
-  if(atoi(header->Attribute("VERSION")) < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
-  {
-    CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
+     if(stricmp(firstChild->Attribute("MAGIC"),Cal::MATERIAL_XMLFILE_EXTENSION)!=0)
+     {
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
         return 0;
+     }    
+
+     if(atoi(firstChild->Attribute("VERSION")) < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
+     {
+        CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
+        return 0;
+     }
+     material = firstChild->NextSiblingElement();
+  }
+  else
+  {
+     material = firstChild;
   }
 
-  cal3d::TiXmlElement*material = header->NextSiblingElement();
+
   if(!material||stricmp(material->Value(),"MATERIAL")!=0)
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
