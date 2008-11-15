@@ -74,13 +74,6 @@ CalCoreModel::CalCoreModel(const CalCoreModel& inOther)
 
 CalCoreModel::~CalCoreModel()
 {
-  assert(m_magic == CalCoreModelMagic );
-  m_magic = 0;
-  assert(m_vectorCoreAnimation.empty());
-  assert(m_vectorCoreMorphAnimation.empty());
-  assert(m_vectorCoreAnimatedMorph.empty());
-  assert(m_vectorCoreMesh.empty());
-  assert(m_vectorCoreMaterial.empty());
 }
 
 
