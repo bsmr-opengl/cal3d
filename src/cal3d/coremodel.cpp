@@ -526,6 +526,49 @@ int CalCoreModel::getCoreAnimationCount() const
   return m_vectorCoreAnimation.size();
 }
 
+/*****************************************************************************/
+/** Provides access to a core morph animation.
+*
+* This function returns the core morph animation with the given ID.
+*
+* @param coreAnimatedMorphId The ID of the core morph animation that should be returned.
+*
+* @return One of the following values:
+*         \li a pointer to the core morph animation
+*         \li \b 0 if an error happend
+*****************************************************************************/
+
+CalCoreAnimatedMorph *CalCoreModel::getCoreAnimatedMorph(int coreAnimatedMorphId)
+{
+   if((coreAnimatedMorphId < 0) 
+
+      || (coreAnimatedMorphId >= (int)m_vectorCoreAnimatedMorph.size())
+
+      || !m_vectorCoreAnimatedMorph[ coreAnimatedMorphId ] )
+
+   {
+      CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__);
+      return 0;
+   }
+
+   return m_vectorCoreAnimatedMorph[coreAnimatedMorphId];
+}
+
+const CalCoreAnimatedMorph *CalCoreModel::getCoreAnimatedMorph(int coreAnimatedMorphId) const
+{
+   if((coreAnimatedMorphId < 0) 
+
+      || (coreAnimatedMorphId >= (int)m_vectorCoreAnimatedMorph.size())
+
+      || !m_vectorCoreAnimatedMorph[ coreAnimatedMorphId ] )
+
+   {
+      CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__);
+      return 0;
+   }
+
+   return m_vectorCoreAnimatedMorph[coreAnimatedMorphId];
+}
 
 
  /*****************************************************************************/
