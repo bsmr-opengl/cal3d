@@ -1017,30 +1017,40 @@ CalCoreAnimationPtr CalLoader::loadXmlCoreAnimation(cal3d::TiXmlDocument &doc, C
 
 CalCoreAnimatedMorph *CalLoader::loadXmlCoreAnimatedMorph(cal3d::TiXmlDocument &doc)
 {
-  //std::stringstream str;
-
   std::string strFilename = "";
 
-  cal3d::TiXmlElement*header = doc.FirstChildElement();
+  cal3d::TiXmlElement* firstChild = doc.FirstChildElement();
 
-  CalHeader headerData;
-  if( !header || !BindFromXml( *header, &headerData ) ) {
-    CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
-    return 0;
-  }
-  
-  
-  if(stricmp(headerData.magic,Cal::ANIMATEDMORPH_XMLFILE_EXTENSION)!=0)
+  if( !firstChild ) 
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
     return 0;
-  }    
-  
-  if(headerData.version < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
-  {
-    CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
-    return 0;
   }
+
+  cal3d::TiXmlElement* animatedMorph = NULL;
+
+  
+  if(stricmp(firstChild->Value(),"HEADER")==0)
+  {
+     if(stricmp(firstChild->Attribute("MAGIC"),Cal::ANIMATEDMORPH_XMLFILE_EXTENSION)!=0)
+     {
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
+        return false;
+     }    
+
+     if(atoi(firstChild->Attribute("VERSION")) < Cal::EARLIEST_COMPATIBLE_FILE_VERSION )
+     {
+        CalError::setLastError(CalError::INCOMPATIBLE_FILE_VERSION, __FILE__, __LINE__, strFilename);
+        return false;
+     }
+
+     animatedMorph = firstChild->NextSiblingElement();
+  }
+  else
+  {
+      animatedMorph = firstChild;
+  }
+
 
   // allocate a new core animatedMorph instance
   CalCoreAnimatedMorph *pCoreAnimatedMorph;
@@ -1059,7 +1069,6 @@ CalCoreAnimatedMorph *CalLoader::loadXmlCoreAnimatedMorph(cal3d::TiXmlDocument &
   }
 
 
-  cal3d::TiXmlElement*animatedMorph = header->NextSiblingElement();
   if(!animatedMorph || stricmp(animatedMorph->Value(),"ANIMATION")!=0)
   {
     CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
@@ -1068,12 +1077,11 @@ CalCoreAnimatedMorph *CalLoader::loadXmlCoreAnimatedMorph(cal3d::TiXmlDocument &
     return 0;
   }  
 
-  if( !BindFromXml( *animatedMorph, pCoreAnimatedMorph ) ) {
-    CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
-    pCoreAnimatedMorph->destroy();
-    delete pCoreAnimatedMorph;
-    return 0;
-  }
+
+  const int trackCount = atoi(animatedMorph->Attribute("NUMTRACKS"));
+  const float duration = (float) atof(animatedMorph->Attribute("DURATION"));
+
+  pCoreAnimatedMorph->setDuration(duration);
   
   // check for a valid duration
   if(pCoreAnimatedMorph->getDuration() <= 0.0f)
@@ -1082,6 +1090,71 @@ CalCoreAnimatedMorph *CalLoader::loadXmlCoreAnimatedMorph(cal3d::TiXmlDocument &
     pCoreAnimatedMorph->destroy();
     delete pCoreAnimatedMorph;
     return 0;
+  }
+
+  cal3d::TiXmlElement* track = animatedMorph->FirstChildElement();
+
+  // load all core tracks
+  for(int trackId = 0; trackId < trackCount; ++trackId)
+  {
+     if(!track || stricmp(track->Value(),"TRACK")!=0)
+     {
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
+        return 0;
+     }
+
+     CalCoreMorphTrack *pCoreMorphTrack = new CalCoreMorphTrack();
+     const int keyFrameCount = atoi(track->Attribute("NUMKEYFRAMES"));
+
+     if(keyFrameCount <= 0)
+     {
+        delete pCoreMorphTrack;
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
+        return 0;
+     }
+
+     pCoreMorphTrack->reserve(keyFrameCount);
+
+     std::string morphName = track->Attribute("MORPHNAME");
+     pCoreMorphTrack->setMorphName(morphName);
+
+     cal3d::TiXmlElement* keyframe= track->FirstChildElement();
+
+     for (int keyFrameId=0; keyFrameId<keyFrameCount; ++keyFrameId)
+     {
+        // load the core keyframe
+        if(!keyframe|| stricmp(keyframe->Value(),"KEYFRAME")!=0)
+        {
+           CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
+           pCoreMorphTrack->destroy();
+           delete pCoreMorphTrack;
+           return 0;
+        }
+
+        CalCoreMorphKeyframe* pCoreMorphKeyframe = new CalCoreMorphKeyframe();
+        float time = (float) atof(keyframe->Attribute("TIME"));
+        pCoreMorphKeyframe->setTime(time);
+
+        cal3d::TiXmlElement *weight = keyframe->FirstChildElement();
+        if (stricmp(weight->Value(), "WEIGHT")!=0)
+        {
+           CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
+           pCoreMorphKeyframe->destroy();
+           delete pCoreMorphKeyframe;
+           return 0;
+        }
+
+        cal3d::TiXmlText* weightText = weight->FirstChild()->ToText();
+        pCoreMorphKeyframe->setWeight( atof(weightText->Value()));
+
+        pCoreMorphTrack->addCoreMorphKeyframe(pCoreMorphKeyframe);
+
+        keyframe = keyframe->NextSiblingElement();
+
+     }
+
+     pCoreAnimatedMorph->addCoreTrack(pCoreMorphTrack);
+
   }
 
   // explicitly close the file
