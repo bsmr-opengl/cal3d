@@ -59,10 +59,11 @@ public:
   std::string getMorphName() const;
   void setMorphName(std::string name);
   
-  int getCoreMorphKeyframeCount();
+  int getCoreMorphKeyframeCount() const;
   void reserve(int);
   
   CalCoreMorphKeyframe* getCoreMorphKeyframe(int idx);
+  const CalCoreMorphKeyframe* getCoreMorphKeyframe(int idx) const;
 
   bool addCoreMorphKeyframe(CalCoreMorphKeyframe *pCoreKeyframe);
 

@@ -232,7 +232,7 @@ void CalCoreMorphTrack::setMorphName(std::string morphname)
 }
 
 
-int CalCoreMorphTrack::getCoreMorphKeyframeCount()
+int CalCoreMorphTrack::getCoreMorphKeyframeCount() const
 {
   return m_keyframes.size();
 }
@@ -250,6 +250,12 @@ CalCoreMorphKeyframe* CalCoreMorphTrack::getCoreMorphKeyframe(int idx)
 {
   return &(m_keyframes[idx]);
 }
+
+const CalCoreMorphKeyframe* CalCoreMorphTrack::getCoreMorphKeyframe(int idx) const
+{
+   return &(m_keyframes[idx]);
+}
+
 
  /*****************************************************************************/
 /** Scale the core track.
