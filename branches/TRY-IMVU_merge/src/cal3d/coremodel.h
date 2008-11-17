@@ -63,6 +63,9 @@ public:
   int addCoreAnimatedMorph(CalCoreAnimatedMorph *pCoreAnimatedMorph);
   CalCoreMorphAnimation *getCoreMorphAnimation(int coreMorphAnimationId);
   const CalCoreMorphAnimation *getCoreMorphAnimation(int coreMorphAnimationId) const;
+  CalCoreAnimatedMorph *getCoreAnimatedMorph(int coreAnimatedMorphId);
+  const CalCoreAnimatedMorph *getCoreAnimatedMorph(int coreAnimatedMorphId) const;
+
   int getCoreMorphAnimationCount() const;
   int loadCoreAnimatedMorph(const std::string& strFilename);
 
