@@ -181,7 +181,7 @@ bool CalCoreSubMorphTarget::setBlendVertex(int blendVertexId, const BlendVertex&
   * @return One of the enum values.
   *****************************************************************************/
 CalMorphTargetType
-CalCoreSubMorphTarget::morphTargetType()
+CalCoreSubMorphTarget::morphTargetType() const
 {
   return m_morphTargetType;
 }

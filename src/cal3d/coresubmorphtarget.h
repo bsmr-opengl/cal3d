@@ -48,12 +48,17 @@ public:
   inline BlendVertex const * getBlendVertex( int blendVertexId ) {
     return m_vectorBlendVertex[blendVertexId];
   }
+
+  inline const BlendVertex* getBlendVertex( int blendVertexId ) const {
+     return m_vectorBlendVertex[blendVertexId];
+  }
+
   const std::vector<BlendVertex*>& getVectorBlendVertex() const;
   virtual bool reserve(int blendVertexCount);
   bool setBlendVertex(int vertexId, const BlendVertex& vertex);
 
   void	getBlendVertex( int vertexId, BlendVertex& outVertex ) const;
-  CalMorphTargetType morphTargetType();
+  CalMorphTargetType morphTargetType() const;
 
   void setName( std::string );
   std::string name() const;
