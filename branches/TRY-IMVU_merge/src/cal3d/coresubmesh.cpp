@@ -809,7 +809,6 @@ const std::vector<CalCoreSubMorphTarget *>& CalCoreSubmesh::getVectorCoreSubMorp
   *
   *****************************************************************************/
 
-
 void CalCoreSubmesh::scale(float factor)
 {
   // rescale all vertices
@@ -818,6 +817,22 @@ void CalCoreSubmesh::scale(float factor)
   {
     m_vectorVertex[vertexId].position*=factor;		
   }
+
+  //also scale any morph target vertices that may be present
+  for (size_t morphID = 0; morphID < m_vectorCoreSubMorphTarget.size(); morphID++)
+  {
+     std::vector<CalCoreSubMorphTarget::BlendVertex*> blendVertVec =
+        m_vectorCoreSubMorphTarget[morphID]->getVectorBlendVertex();
+
+     for (size_t vertID = 0; vertID < blendVertVec.size(); vertID++)
+     {
+        if (blendVertVec[vertID])
+        {
+           blendVertVec[vertID]->position *= factor;
+        }
+     }
+  }
+
 
   if(!m_vectorSpring.empty())
   {
