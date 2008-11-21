@@ -1106,13 +1106,6 @@ CalCoreAnimatedMorph *CalLoader::loadXmlCoreAnimatedMorph(cal3d::TiXmlDocument &
      CalCoreMorphTrack *pCoreMorphTrack = new CalCoreMorphTrack();
      const int keyFrameCount = atoi(track->Attribute("NUMKEYFRAMES"));
 
-     if(keyFrameCount <= 0)
-     {
-        delete pCoreMorphTrack;
-        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__, strFilename);
-        return 0;
-     }
-
      pCoreMorphTrack->reserve(keyFrameCount);
 
      std::string morphName = track->Attribute("MORPHNAME");
@@ -1154,8 +1147,10 @@ CalCoreAnimatedMorph *CalLoader::loadXmlCoreAnimatedMorph(cal3d::TiXmlDocument &
      }
 
      pCoreAnimatedMorph->addCoreTrack(pCoreMorphTrack);
+     track = track->NextSiblingElement();
 
   }
+
 
   // explicitly close the file
   doc.Clear();
