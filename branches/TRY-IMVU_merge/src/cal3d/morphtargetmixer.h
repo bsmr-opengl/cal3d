@@ -44,6 +44,8 @@ private:
   int mPlayedAnimatedMorphID;
 
   void SetTrackWeights(const CalCoreAnimatedMorph& morph, float elapsedTime);
+
+  void ApplyWeightToMorphMesh(const std::string &morphMeshName, float trackWeight);
   float CalcKeyframeWeight(const std::vector<CalCoreMorphKeyframe> &keyframes, float elapsedTime);
 };
 
