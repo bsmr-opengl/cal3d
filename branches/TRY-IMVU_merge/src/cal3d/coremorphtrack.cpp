@@ -269,7 +269,7 @@ const CalCoreMorphKeyframe* CalCoreMorphTrack::getCoreMorphKeyframe(int idx) con
 
 void CalCoreMorphTrack::scale(float factor)
 {
-    int keyframeId;
+    unsigned int keyframeId;
     for(keyframeId = 0; keyframeId < m_keyframes.size(); keyframeId++)
     {
         float weight = m_keyframes[keyframeId].getWeight();
@@ -277,6 +277,12 @@ void CalCoreMorphTrack::scale(float factor)
         m_keyframes[keyframeId].setWeight(weight);
     }
 
+}
+
+const std::vector<CalCoreMorphKeyframe> &
+CalCoreMorphTrack::getVectorCoreMorphKeyframes() const
+{
+   return m_keyframes;
 }
 
 std::vector<CalCoreMorphKeyframe> &

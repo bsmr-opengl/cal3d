@@ -66,8 +66,10 @@ public:
   const CalCoreMorphKeyframe* getCoreMorphKeyframe(int idx) const;
 
   bool addCoreMorphKeyframe(CalCoreMorphKeyframe *pCoreKeyframe);
-
+  
+  const std::vector<CalCoreMorphKeyframe> & getVectorCoreMorphKeyframes() const;
   std::vector<CalCoreMorphKeyframe> & getVectorCoreMorphKeyframes();
+
   void scale(float factor);
 
 private:
