@@ -54,6 +54,7 @@ public:
   CalCoreMorphTrack *getCoreTrack(std::string const & trackId);
   float getDuration() const;
   std::list<CalCoreMorphTrack>& getListCoreTrack();
+  const std::list<CalCoreMorphTrack>& getListCoreTrack() const;
   void setDuration(float duration);
   void scale(float factor);
   void removeZeroScaleTracks();

@@ -200,6 +200,20 @@ std::list<CalCoreMorphTrack>& CalCoreAnimatedMorph::getListCoreTrack()
   return m_listCoreTrack;
 }
 
+/*****************************************************************************/
+/** Returns the core track list.
+*
+* This function returns the list that contains all core tracks of the core
+* animatedMorph instance.
+*
+* @return A reference to the core track list.
+*****************************************************************************/
+
+const std::list<CalCoreMorphTrack>& CalCoreAnimatedMorph::getListCoreTrack() const
+{
+   return m_listCoreTrack;
+}
+
  /*****************************************************************************/
 /** Sets the duration.
   *

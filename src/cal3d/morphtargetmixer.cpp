@@ -37,27 +37,6 @@ mPlayedAnimatedMorphID(-1)
 {
   assert(pModel);
   m_pModel = pModel;
-
-  //if(pModel->getCoreModel()->getCoreMorphAnimationCount() != 0)
-  //{
-  //  int morphAnimationCount = pModel->getCoreModel()->getCoreMorphAnimationCount();
-  //  // reserve the space needed in all the vectors
-  //  m_vectorCurrentWeight.resize(morphAnimationCount);
-  //  m_vectorEndWeight.resize(morphAnimationCount);
-  //  m_vectorDuration.resize(morphAnimationCount);
-  //  std::vector<float>::iterator iteratorCurrentWeight = m_vectorCurrentWeight.begin();
-  //  std::vector<float>::iterator iteratorEndWeight = m_vectorEndWeight.begin();
-  //  std::vector<float>::iterator iteratorDuration = m_vectorDuration.begin();
-  //  while(iteratorCurrentWeight!=m_vectorCurrentWeight.end())
-  //  {
-  //    (*iteratorCurrentWeight) = 0.0f;
-  //    (*iteratorEndWeight) = 0.0f;
-  //    (*iteratorDuration) = 0.0f;
-  //    ++iteratorCurrentWeight;
-  //    ++iteratorEndWeight;
-  //    ++iteratorDuration;
-  //  }
-  //}
 }
 
 
@@ -77,16 +56,9 @@ mPlayedAnimatedMorphID(-1)
   *****************************************************************************/
 bool CalMorphTargetMixer::blend(int id, float weight, float delay)
 {
-  //if((id < 0) || (id >= (int)m_vectorCurrentWeight.size()))
-  //{
-  //  CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__);
-  //  return false;
-  //}
-  //m_vectorEndWeight[id] = weight;
-  //m_vectorDuration[id] = delay;
    mPlayTime = 0.f;
    mPlayedAnimatedMorphID = id;
-  return true;
+   return true;
 }
 
  /*****************************************************************************/
@@ -105,16 +77,9 @@ bool CalMorphTargetMixer::blend(int id, float weight, float delay)
 
 bool CalMorphTargetMixer::clear(int id, float delay)
 {
-  //if((id < 0) || (id >= (int)m_vectorCurrentWeight.size()))
-  //{
-  //  CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__);
-  //  return false;
-  //}
-  //m_vectorEndWeight[id] = 0.0f;
-  //m_vectorDuration[id] = delay;
    mPlayTime = 0.f;
    mPlayedAnimatedMorphID = -1;
-  return true;
+   return true;
 }
 
  /*****************************************************************************/
@@ -126,31 +91,9 @@ bool CalMorphTargetMixer::clear(int id, float delay)
   *****************************************************************************/
 float CalMorphTargetMixer::getCurrentWeight(int id) const
 {
-  //if((id < 0) || (id >= (int)m_vectorCurrentWeight.size()))
-  //{
-  //  CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__);
-  //  return false;
-  //}
-  //return m_vectorCurrentWeight[id];
    return 0.f;
 }
 
- /*****************************************************************************/
-/** Get the weight of the base vertices.
-  *
-  * @return The weight of the base vertices.
-  *****************************************************************************/
-//float CalMorphTargetMixer::getCurrentWeightBase() const
-//{
-//  float currentWeight = 1.0f;
-//  std::vector<float>::const_iterator iteratorCurrentWeight = m_vectorCurrentWeight.begin();
-//  while(iteratorCurrentWeight!=m_vectorCurrentWeight.end())
-//  {
-//    currentWeight -=(*iteratorCurrentWeight);
-//    ++iteratorCurrentWeight;
-//  }
-//  return currentWeight;
-//}
 
  /*****************************************************************************/
 /** Copy data from one mixer (for the same core model) to another.
@@ -160,28 +103,16 @@ float CalMorphTargetMixer::getCurrentWeight(int id) const
   *****************************************************************************/
 bool CalMorphTargetMixer::copy( const CalMorphTargetMixer& inOther )
 {
-	//if (inOther.m_pModel->getCoreModel() != this->m_pModel->getCoreModel())
-	//{
- // 		CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__);
- // 		return false;
-	//}
-	//
-	//try
-	//{
-	//	std::vector<float>	currentWeight( inOther.m_vectorCurrentWeight );
-	//	std::vector<float>	endWeight( inOther.m_vectorEndWeight );
-	//	std::vector<float>	duration( inOther.m_vectorDuration );
-	//	
-	//	m_vectorCurrentWeight.swap( currentWeight );
-	//	m_vectorEndWeight.swap( endWeight );
-	//	m_vectorDuration.swap( duration );
-	//}
- // 	catch (...)
- // 	{
- // 		CalError::setLastError(CalError::MEMORY_ALLOCATION_FAILED, __FILE__, __LINE__);
- // 		return false;
- // 	}
-   return false;
+	if (inOther.m_pModel->getCoreModel() != this->m_pModel->getCoreModel())
+	{
+  		CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__);
+  		return false;
+	}
+
+   mPlayTime = inOther.mPlayTime;
+   mPlayedAnimatedMorphID = inOther.mPlayedAnimatedMorphID;
+
+   return true;
 }
 
  /*****************************************************************************/
@@ -202,35 +133,15 @@ void CalMorphTargetMixer::update(float deltaTime)
 
    mPlayTime += deltaTime;
 
-   CalCoreAnimatedMorph* morph = m_pModel->getCoreModel()->getCoreAnimatedMorph(mPlayedAnimatedMorphID);
+   const CalCoreAnimatedMorph* morph = m_pModel->getCoreModel()->getCoreAnimatedMorph(mPlayedAnimatedMorphID);
    if (morph == NULL)
    {
       return;
    }
 
-   SetTrackWeights(mPlayedAnimatedMorphID, mPlayTime);
+   SetTrackWeights(*morph, mPlayTime);
 
 
-  //std::vector<float>::iterator iteratorCurrentWeight = m_vectorCurrentWeight.begin();
-  //std::vector<float>::iterator iteratorEndWeight = m_vectorEndWeight.begin();
-  //std::vector<float>::iterator iteratorDuration = m_vectorDuration.begin();
-  //while(iteratorCurrentWeight!=m_vectorCurrentWeight.end())
-  //{
-  //  if(deltaTime >= (*iteratorDuration))
-  //  {
-  //    (*iteratorCurrentWeight) = (*iteratorEndWeight);
-  //    (*iteratorDuration) = 0.0f;
-  //  }
-  //  else
-  //  {
-  //    (*iteratorCurrentWeight) += ((*iteratorEndWeight)-(*iteratorCurrentWeight)) *
-  //                                deltaTime/(*iteratorDuration);
-  //    (*iteratorDuration) -= deltaTime;
-  //  }
-  //  ++iteratorCurrentWeight;
-  //  ++iteratorEndWeight;
-  //  ++iteratorDuration;
-  //}
   //int morphAnimationID = 0;
   //while(morphAnimationID<getMorphTargetCount())
   //{
@@ -270,31 +181,24 @@ void CalMorphTargetMixer::update(float deltaTime)
 
 int CalMorphTargetMixer::getMorphTargetCount() const
 {
-//  return m_vectorCurrentWeight.size();
    return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
-void CalMorphTargetMixer::SetTrackWeights(int morphID, float elapsedTime)
+void CalMorphTargetMixer::SetTrackWeights(const CalCoreAnimatedMorph& morph, float elapsedTime)
 {
    //For every track in the animation, find the weight of the key frame
    //that's related to the elapsedTime and adjust the weight of the morph target
    //mesh that matches the track's name.
 
-   CalCoreAnimatedMorph* morph = m_pModel->getCoreModel()->getCoreAnimatedMorph(morphID);
-   if (morph == NULL)
-   {
-      return ;
-   }
+   const std::list<CalCoreMorphTrack> tracks = morph.getListCoreTrack();
 
-   std::list<CalCoreMorphTrack> tracks = morph->getListCoreTrack();
-
-   std::list<CalCoreMorphTrack>::iterator itr;
+   std::list<CalCoreMorphTrack>::const_iterator itr;
 
    for (itr=tracks.begin(); itr!=tracks.end(); ++itr)
    {
-      CalCoreMorphTrack *track = &(*itr);
-      std::vector<CalCoreMorphKeyframe> &keyFrames = track->getVectorCoreMorphKeyframes();      
+      const CalCoreMorphTrack *track = &(*itr);
+      const std::vector<CalCoreMorphKeyframe> &keyFrames = track->getVectorCoreMorphKeyframes();      
 
       float trackWeight = 0.f;
 
@@ -308,7 +212,6 @@ void CalMorphTargetMixer::SetTrackWeights(int morphID, float elapsedTime)
          trackWeight = CalcKeyframeWeight(keyFrames, elapsedTime);
       }
 
-           
       CalSubmesh* subMesh = m_pModel->getMesh(0)->getSubmesh(0); //TODO 
       subMesh->setMorphTargetWeight(track->getMorphName(), trackWeight);
    }
@@ -364,11 +267,9 @@ T MapRangeValue(T sX, T xMin, T xMax, T yMin, T yMax)
 //////////////////////////////////////////////////////////////////////////
 float CalMorphTargetMixer::CalcKeyframeWeight(const std::vector<CalCoreMorphKeyframe> &keyFrames, float elapsedTime)
 {
-   float trackWeight = 0.f;
-
-
    std::vector<CalCoreMorphKeyframe>::const_iterator keyframeItr;
 
+   //find the first key frame that has a time greater than the elapsed time
    for (keyframeItr = keyFrames.begin(); keyframeItr != keyFrames.end(); ++keyframeItr)
    {
       if ((*keyframeItr).getTime() > elapsedTime)
@@ -377,23 +278,23 @@ float CalMorphTargetMixer::CalcKeyframeWeight(const std::vector<CalCoreMorphKeyf
       }
    }
 
+   //if the key frame is the first, or there aren't any key frames left to play
+   //then set the weight to zero
    if (keyframeItr == keyFrames.end() ||
        keyframeItr == keyFrames.begin())
    {
-      //elapsedTime is before the start or after the end of all the keyframes
       return (0.f);
    }
 
-   float endTime = (*keyframeItr).getTime();
-   float endWeight = (*keyframeItr).getWeight();
+   const float endTime = (*keyframeItr).getTime();
+   const float endWeight = (*keyframeItr).getWeight();
    
+   //get the previous key frame
    --keyframeItr;
-   float startTime = (*keyframeItr).getTime();
-   float startWeight = (*keyframeItr).getWeight();
+   const float startTime = (*keyframeItr).getTime();
+   const float startWeight = (*keyframeItr).getWeight();
   
-   trackWeight = MapRangeValue(elapsedTime, startTime, endTime, startWeight, endWeight);
-
-   return trackWeight;
+   return (MapRangeValue(elapsedTime, startTime, endTime, startWeight, endWeight));
 }
 
 //****************************************************************************//
