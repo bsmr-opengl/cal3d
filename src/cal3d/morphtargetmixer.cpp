@@ -277,6 +277,10 @@ int CalMorphTargetMixer::getMorphTargetCount() const
 //////////////////////////////////////////////////////////////////////////
 void CalMorphTargetMixer::SetTrackWeights(int morphID, float elapsedTime)
 {
+   //For every track in the animation, find the weight of the key frame
+   //that's related to the elapsedTime and adjust the weight of the morph target
+   //mesh that matches the track's name.
+
    CalCoreAnimatedMorph* morph = m_pModel->getCoreModel()->getCoreAnimatedMorph(morphID);
    if (morph == NULL)
    {
@@ -290,31 +294,106 @@ void CalMorphTargetMixer::SetTrackWeights(int morphID, float elapsedTime)
    for (itr=tracks.begin(); itr!=tracks.end(); ++itr)
    {
       CalCoreMorphTrack *track = &(*itr);
-      std::vector<CalCoreMorphKeyframe> & keyFrames = track->getVectorCoreMorphKeyframes();
+      std::vector<CalCoreMorphKeyframe> &keyFrames = track->getVectorCoreMorphKeyframes();      
 
-      std::vector<CalCoreMorphKeyframe>::iterator keyframeItr;
       float trackWeight = 0.f;
 
-
-      for (keyframeItr = keyFrames.begin(); keyframeItr != keyFrames.end(); ++keyframeItr)
+      if (keyFrames.empty())
       {
-         if ((*keyframeItr).getTime() < elapsedTime)
-         {
-            trackWeight = (*keyframeItr).getWeight();
-         }
-         else
-         {
-            break;
-         }
+         trackWeight = 0.f;
       }
-      
+      else if (keyFrames.back().getTime() > elapsedTime)
+      {
+         //only calc the weight if there are key frames left to be played
+         trackWeight = CalcKeyframeWeight(keyFrames, elapsedTime);
+      }
 
-      CalSubmesh* subMesh = m_pModel->getMesh(0)->getSubmesh(0);
+           
+      CalSubmesh* subMesh = m_pModel->getMesh(0)->getSubmesh(0); //TODO 
       subMesh->setMorphTargetWeight(track->getMorphName(), trackWeight);
-
-
    }
 
    return ;
 }
+
+/** Apply a linear interpolation between the two supplied numbers using a
+* third percentage value.
+*
+* @param x : specifies the left bound of the range.
+* @param y : specifies the right bound of the range.
+* @param t: the normalized value with respect to the specified range to be interpolated.
+* @return the interpolated value for the coefficient of the range.
+*/
+template <typename Real>
+inline Real Lerp(Real x, Real y, Real t)
+{
+   return x + t * (y - x);
+}
+
+/// Normalizes a value within a specified space range.
+/// Usage:  To find the normalized value for a range:
+/// float nX = CalculateNormal( valueX , xMin , xMax );
+/// @param sX the value with respect to the specified range to be normalized.
+/// @param sMin specifies the left bound of the range.
+/// @param sMax specifies the right bound of the range.
+/// @return the normalized coefficient for the input to the range.
+template<typename T>
+T CalculateNormal(T sX, T sMin, T sMax)
+{
+   T delta( sMax - sMin );
+   return( (sX-sMin) / delta );
+}
+
+
+/// Calculates the corresponding value for a mirrored space.
+/// Given defined ranges for X space and Y space, and a known value in X space,
+/// where X space and Y space are linearly related, find the corresponding value in Y space.
+/// Usage: float y = MapRangeValue(x,xMin,xMax,yMin,yMax);
+/// @param sX the value with respect to the X range to be transformed into the Y range.
+/// @param xMin specifies the left bound of the X range.
+/// @param xMax specifies the right bound of the X range.
+/// @param yMin specifies the left bound of the Y range.
+/// @param yMax specifies the right bound of the Y range.
+template<typename T>
+T MapRangeValue(T sX, T xMin, T xMax, T yMin, T yMax)
+{
+   return( Lerp( yMin, yMax, CalculateNormal(sX,xMin,xMax)) );
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+float CalMorphTargetMixer::CalcKeyframeWeight(const std::vector<CalCoreMorphKeyframe> &keyFrames, float elapsedTime)
+{
+   float trackWeight = 0.f;
+
+
+   std::vector<CalCoreMorphKeyframe>::const_iterator keyframeItr;
+
+   for (keyframeItr = keyFrames.begin(); keyframeItr != keyFrames.end(); ++keyframeItr)
+   {
+      if ((*keyframeItr).getTime() > elapsedTime)
+      {
+         break;
+      }
+   }
+
+   if (keyframeItr == keyFrames.end() ||
+       keyframeItr == keyFrames.begin())
+   {
+      //elapsedTime is before the start or after the end of all the keyframes
+      return (0.f);
+   }
+
+   float endTime = (*keyframeItr).getTime();
+   float endWeight = (*keyframeItr).getWeight();
+   
+   --keyframeItr;
+   float startTime = (*keyframeItr).getTime();
+   float startWeight = (*keyframeItr).getWeight();
+  
+   trackWeight = MapRangeValue(elapsedTime, startTime, endTime, startWeight, endWeight);
+
+   return trackWeight;
+}
+
 //****************************************************************************//
