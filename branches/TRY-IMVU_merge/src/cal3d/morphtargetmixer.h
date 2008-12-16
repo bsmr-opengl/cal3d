@@ -14,7 +14,7 @@
 
 
 #include "cal3d/global.h"
-
+#include <cal3d/coremorphkeyframe.h>
 
 class CalModel;
 
@@ -43,6 +43,7 @@ private:
   int mPlayedAnimatedMorphID;
 
   void SetTrackWeights(int morphID, float elapsedTime);
+  float CalcKeyframeWeight(const std::vector<CalCoreMorphKeyframe> &keyframes, float elapsedTime);
 };
 
 #endif
