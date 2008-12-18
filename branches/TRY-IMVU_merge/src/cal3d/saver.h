@@ -26,10 +26,13 @@ class CalCoreModel;
 class CalCoreSkeleton;
 class CalCoreBone;
 class CalCoreAnimation;
+class CalCoreAnimatedMorph;
 class CalCoreMesh;
 class CalCoreSubmesh;
 class CalCoreMaterial;
 class CalCoreKeyframe;
+class CalCoreMorphTrack;
+class CalCoreMorphKeyframe;
 class CalCoreTrack;
 
 //****************************************************************************//
@@ -56,6 +59,7 @@ class CAL3D_API CalSaver
 {
 public:
   static bool saveCoreAnimation(const std::string& strFilename, CalCoreAnimation *pCoreAnimation, CalSaverAnimationOptions *pOptions = NULL);
+  static bool saveCoreAnimatedMorph(const std::string& strFilename, CalCoreAnimatedMorph *pCoreAnimatedMorph);
   static bool saveCoreMaterial(const std::string& strFilename, CalCoreMaterial *pCoreMaterial);
   static bool saveCoreMesh(const std::string& strFilename, CalCoreMesh *pCoreMesh);
   static bool saveCoreSkeleton(const std::string& strFilename, CalCoreSkeleton *pCoreSkeleton);
@@ -66,9 +70,13 @@ protected:
   static bool saveCompressedCoreKeyframe(std::ofstream& file, const std::string& strFilename, CalCoreKeyframe *pCoreKeyframe, CalSaverAnimationOptions *pOptions);
   static bool saveCoreSubmesh(std::ofstream& file, const std::string& strFilename, CalCoreSubmesh *pCoreSubmesh);
   static bool saveCoreTrack(std::ofstream& file, const std::string& strFilename, CalCoreTrack *pCoreTrack, CalSaverAnimationOptions *pOptions = NULL);
+  static bool saveCoreMorphKeyframe(std::ofstream& file, const std::string& strFilename, CalCoreMorphKeyframe *pCoreMorphKeyframe);
+  static bool saveCoreMorphTrack(std::ofstream& file, const std::string& strFilename, CalCoreMorphTrack *pCoreMorphTrack);
+
 
   static bool saveXmlCoreSkeleton(const std::string& strFilename, CalCoreSkeleton *pCoreSkeleton);
   static bool saveXmlCoreAnimation(const std::string& strFilename, CalCoreAnimation *pCoreAnimation);
+  static bool saveXmlCoreAnimatedMorph(const std::string& strFilename, CalCoreAnimatedMorph *pCoreAnimatedMorph);
   static bool saveXmlCoreMesh(const std::string& strFilename, CalCoreMesh *pCoreMesh);
   static bool saveXmlCoreMaterial(const std::string& strFilename, CalCoreMaterial *pCoreMaterial);  
 };

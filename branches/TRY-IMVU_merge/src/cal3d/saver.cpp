@@ -24,13 +24,15 @@
 #include "cal3d/coreskeleton.h"
 #include "cal3d/corebone.h"
 #include "cal3d/coreanimation.h"
+#include "cal3d/coreanimatedmorph.h"
 #include "cal3d/coremesh.h"
 #include "cal3d/coresubmesh.h"
+#include "cal3d/coresubmorphtarget.h"
 #include "cal3d/corematerial.h"
 #include "cal3d/corekeyframe.h"
 #include "cal3d/coretrack.h"
 #include "cal3d/tinyxml.h"
-
+#include "cal3d/xmlformat.h"
 #include <float.h>
 
 using namespace cal3d;
@@ -127,6 +129,89 @@ bool CalSaver::saveCoreAnimation(const std::string& strFilename, CalCoreAnimatio
   pCoreAnimation->setFilename(strFilename);
 
   return true;
+}
+
+
+
+/*****************************************************************************/
+/** Saves a core animated morph
+*
+* This function saves a core animation instance to a file.
+*
+* @param strFilename The name of the file to save the core animation instance
+*                    to.
+* @param pCoreAnimation A pointer to the core animation instance that should
+*                       be saved.
+*
+* @return One of the following values:
+*         \li \b true if successful
+*         \li \b false if an error happend
+*****************************************************************************/
+
+bool CalSaver::saveCoreAnimatedMorph(const std::string& strFilename, CalCoreAnimatedMorph *pCoreAnimatedMorph)
+{
+   if(strFilename.size()>= 3 && stricmp(strFilename.substr(strFilename.size()-3,3).c_str(),
+      Cal::ANIMATEDMORPH_XMLFILE_EXTENSION)==0)
+   {
+      return saveXmlCoreAnimatedMorph(strFilename, pCoreAnimatedMorph); 
+   }
+
+
+   // open the file
+   std::ofstream file;
+   file.open(strFilename.c_str(), std::ios::out | std::ios::binary);
+   if(!file)
+   {
+      CalError::setLastError(CalError::FILE_CREATION_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // write magic tag
+   if(!CalPlatform::writeBytes(file, &Cal::ANIMATEDMORPH_FILE_MAGIC, sizeof(Cal::ANIMATEDMORPH_FILE_MAGIC)))
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // write version info
+   if(!CalPlatform::writeInteger(file, Cal::CURRENT_FILE_VERSION))
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // write the duration of the core animatedMorph
+   if(!CalPlatform::writeFloat(file, pCoreAnimatedMorph->getDuration()))
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // get core track list
+   std::list<CalCoreMorphTrack>& listCoreMorphTrack = pCoreAnimatedMorph->getListCoreTrack();
+
+   // write the number of tracks
+   if(!CalPlatform::writeInteger(file, listCoreMorphTrack.size()))
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return 0;
+   }
+
+   std::list<CalCoreMorphTrack>::iterator iteratorCoreMorphTrack;
+   for(iteratorCoreMorphTrack = listCoreMorphTrack.begin(); iteratorCoreMorphTrack != listCoreMorphTrack.end(); ++iteratorCoreMorphTrack)
+   {
+      // save coreMorph track
+      if(!saveCoreMorphTrack(file, strFilename, &(*iteratorCoreMorphTrack)))
+      {
+         return false;
+      }
+   }
+
+   // explicitly close the file
+   file.close();
+
+   return true;
+
 }
 
  /*****************************************************************************/
@@ -316,6 +401,46 @@ bool CalSaver::saveCompressedCoreKeyframe(std::ofstream& file, const std::string
   }
 
   return true;
+}
+
+
+/*****************************************************************************/
+/** Saves a core morphKeyframe instance.
+*
+* This function saves a core morphKeyframe instance to a file stream.
+*
+* @param file The file stream to save the core morphKeyframe instance to.
+* @param strFilename The name of the file stream.
+* @param pCoreMorphKeyframe A pointer to the core morphKeyframe instance that should be
+*                      saved.
+*
+* @return One of the following values:
+*         \li \b true if successful
+*         \li \b false if an error happend
+*****************************************************************************/
+
+bool CalSaver::saveCoreMorphKeyframe(std::ofstream& file, const std::string& strFilename, CalCoreMorphKeyframe *pCoreMorphKeyframe)
+{
+   if(!file)
+   {
+      CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // write the time of the morphKeyframe
+   CalPlatform::writeFloat(file, pCoreMorphKeyframe->getTime());
+
+   // write the weight
+   CalPlatform::writeFloat(file, pCoreMorphKeyframe->getWeight());
+
+   // check if an error happend
+   if(!file)
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   return true;
 }
 
  /*****************************************************************************/
@@ -603,6 +728,10 @@ bool CalSaver::saveCoreSubmesh(std::ofstream& file, const std::string& strFilena
   // write the number of texture coordinates per vertex
   CalPlatform::writeInteger(file, vectorvectorTextureCoordinate.size());
 
+  // write the number of morph targets
+  int morphCount = pCoreSubmesh->getCoreSubMorphTargetCount();
+  CalPlatform::writeInteger(file, morphCount);
+
   // check if an error happened
   if(!file)
   {
@@ -623,6 +752,9 @@ bool CalSaver::saveCoreSubmesh(std::ofstream& file, const std::string& strFilena
     CalPlatform::writeFloat(file, vertex.normal.x);
     CalPlatform::writeFloat(file, vertex.normal.y);
     CalPlatform::writeFloat(file, vertex.normal.z);
+    CalPlatform::writeFloat(file, vertex.vertexColor.x);
+    CalPlatform::writeFloat(file, vertex.vertexColor.y);
+    CalPlatform::writeFloat(file, vertex.vertexColor.z);
     CalPlatform::writeInteger(file, vertex.collapseId);
     CalPlatform::writeInteger(file, vertex.faceCollapseCount);
 
@@ -706,6 +838,69 @@ bool CalSaver::saveCoreSubmesh(std::ofstream& file, const std::string& strFilena
       return false;
     }
   }
+
+  std::vector<CalCoreSubMorphTarget *>& vectorMorphs = pCoreSubmesh->getVectorCoreSubMorphTarget();
+
+  for( int morphId = 0; morphId < morphCount; morphId++ ) 
+  {
+     CalCoreSubMorphTarget * morphTarget = vectorMorphs[morphId];
+     CalPlatform::writeString(file, morphTarget->name());
+     int morphVertCount = 0;
+
+     for(int blendId = 0; blendId < morphTarget->getBlendVertexCount(); ++blendId)
+     {
+        CalCoreSubMorphTarget::BlendVertex const * bv = morphTarget->getBlendVertex(blendId);
+        if( !bv ) {
+           continue;
+        }
+        CalCoreSubmesh::Vertex& Vertex = vectorVertex[blendId];
+        static double differenceTolerance = 0.01;
+        CalVector positionDiff = bv->position - Vertex.position;
+        CalVector normalDiff = bv->normal - Vertex.normal;
+        double positionDiffLength = fabs(positionDiff.length());
+        double normalDiffLength = fabs(normalDiff.length());
+
+        bool skip = false;
+        //      if( positionDiffLength < differenceTolerance && normalDiffLength < differenceTolerance ) {
+        if( positionDiffLength < differenceTolerance ) {
+           skip = true;
+        }
+
+        std::vector<CalCoreSubmesh::TextureCoordinate> const & textureCoords = bv->textureCoords;
+        size_t tcI;
+        for( tcI = 0; tcI < textureCoords.size(); tcI++ ) {
+           CalCoreSubmesh::TextureCoordinate const & tc1 = textureCoords[tcI];
+           CalCoreSubmesh::TextureCoordinate const & tc2 = vectorvectorTextureCoordinate[tcI][blendId];
+           if( fabs(tc1.u - tc2.u) > differenceTolerance ||
+              fabs(tc1.v - tc2.v) > differenceTolerance )
+           {
+              skip = false;
+           }
+        }
+
+
+        if(skip) {
+           continue;
+        }
+
+        morphVertCount++;
+        CalPlatform::writeInteger(file, blendId);
+        CalPlatform::writeFloat(file, bv->position.x);
+        CalPlatform::writeFloat(file, bv->position.y);
+        CalPlatform::writeFloat(file, bv->position.z);
+        CalPlatform::writeFloat(file, bv->normal.x);
+        CalPlatform::writeFloat(file, bv->normal.y);
+        CalPlatform::writeFloat(file, bv->normal.z);
+        for( tcI = 0; tcI < textureCoords.size(); tcI++ ) {
+           CalCoreSubmesh::TextureCoordinate const & tc1 = textureCoords[tcI];
+           CalPlatform::writeFloat(file, tc1.u);
+           CalPlatform::writeFloat(file, tc1.v);
+        }
+     }
+     CalPlatform::writeInteger(file, (int)vectorVertex.size()+1);
+
+  }
+
 
   // write all faces
   int faceId;
@@ -838,6 +1033,57 @@ bool CalSaver::saveCoreTrack(std::ofstream& file, const std::string& strFilename
 
   return true;
 }
+
+
+/*****************************************************************************/
+/** Saves a core morphTrack instance.
+*
+* This function saves a core morphTrack instance to a file stream.
+*
+* @param file The file stream to save the core morphTrack instance to.
+* @param strFilename The name of the file stream.
+* @param pCoreMorphTrack A pointer to the core morphTrack instance that should be saved.
+*
+* @return One of the following values:
+*         \li \b true if successful
+*         \li \b false if an error happend
+*****************************************************************************/
+
+bool CalSaver::saveCoreMorphTrack(std::ofstream& file, const std::string& strFilename, CalCoreMorphTrack *pCoreMorphTrack)
+{
+   if(!file)
+   {
+      CalError::setLastError(CalError::INVALID_HANDLE, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // write the morph name
+   if(!CalPlatform::writeString(file, pCoreMorphTrack->getMorphName()))
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // read the number of keyframes
+   if(!CalPlatform::writeInteger(file, pCoreMorphTrack->getCoreMorphKeyframeCount()))
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   }
+
+   // save all core keyframes
+   for(int i = 0; i < pCoreMorphTrack->getCoreMorphKeyframeCount(); ++i)
+   {
+      // save the core keyframe
+      if(!saveCoreMorphKeyframe(file, strFilename, pCoreMorphTrack->getCoreMorphKeyframe(i)))
+      {
+         return false;
+      }
+   }
+
+   return true;
+}
+
 
  /*****************************************************************************/
 /** Saves a core skeleton instance to a XML file
@@ -1072,6 +1318,103 @@ bool CalSaver::saveXmlCoreAnimation(const std::string& strFilename, CalCoreAnima
 	return true;
 }
 
+/*****************************************************************************/
+/** Saves a core morph animation instance in a XML file.
+*
+* This function saves a core morph animation instance to a XML file.
+*
+* @param strFilename The name of the file to save the core animation instance
+*                    to.
+* @param pCoreAnimation A pointer to the core animation instance that should
+*                       be saved.
+*
+* @return One of the following values:
+*         \li \b true if successful
+*         \li \b false if an error happend
+*****************************************************************************/
+
+#define USE_XML_BINDINGS ( 0 )
+bool CalSaver::saveXmlCoreAnimatedMorph(const std::string& strFilename, CalCoreAnimatedMorph *pCoreAnimatedMorph)
+{
+   TiXmlDocument doc(strFilename);
+#if USE_XML_BINDINGS
+   SaveCalHeader( &doc, Cal::ANIMATEDMORPH_XMLFILE_EXTENSION, Cal::LIBRARY_VERSION );
+
+   TiXmlElement animation("ANIMATION");
+   if( !BindToXml( &animation, *pCoreAnimatedMorph ) ) {
+      return false;
+   }
+   doc.InsertEndChild(animation);
+
+#else
+   std::stringstream str;
+
+   TiXmlElement animation("ANIMATION");
+
+   TiXmlElement header("HEADER");
+   header.SetAttribute("MAGIC",Cal::ANIMATEDMORPH_XMLFILE_EXTENSION);
+   header.SetAttribute("VERSION",Cal::LIBRARY_VERSION);
+
+   doc.InsertEndChild(header);
+
+   str.str("");
+   str << pCoreAnimatedMorph->getDuration(); 
+   animation.SetAttribute("DURATION",str.str());
+
+   // get core track list
+   std::list<CalCoreMorphTrack>& listCoreMorphTrack = pCoreAnimatedMorph->getListCoreTrack();
+
+   animation.SetAttribute("NUMTRACKS",listCoreMorphTrack.size());
+
+   std::list<CalCoreMorphTrack>::iterator iteratorCoreMorphTrack;
+   for(iteratorCoreMorphTrack = listCoreMorphTrack.begin(); iteratorCoreMorphTrack != listCoreMorphTrack.end(); ++iteratorCoreMorphTrack)
+   {
+      CalCoreMorphTrack *pCoreMorphTrack=&(*iteratorCoreMorphTrack);
+
+      TiXmlElement track("TRACK");
+      track.SetAttribute("MORPHNAME",pCoreMorphTrack->getMorphName());
+
+      track.SetAttribute("NUMKEYFRAMES",pCoreMorphTrack->getCoreMorphKeyframeCount());
+
+      // save all core keyframes
+      for (int i = 0; i < pCoreMorphTrack->getCoreMorphKeyframeCount(); ++i)
+      {
+         CalCoreMorphKeyframe *pCoreMorphKeyframe=pCoreMorphTrack->getCoreMorphKeyframe(i);
+
+         TiXmlElement keyframe("KEYFRAME");
+
+         str.str("");
+         str << pCoreMorphKeyframe->getTime();         
+         keyframe.SetAttribute("TIME",str.str());
+
+         TiXmlElement weight("WEIGHT");
+         float w = pCoreMorphKeyframe->getWeight();
+
+         str.str("");
+         str << w;
+
+         TiXmlText weightdata(str.str());  
+
+         weight.InsertEndChild(weightdata);
+         keyframe.InsertEndChild(weight);
+
+         track.InsertEndChild(keyframe);
+      }
+
+      animation.InsertEndChild(track);
+   }
+
+   doc.InsertEndChild(animation);
+#endif
+
+   if(!doc.SaveFile())
+   {
+      CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+      return false;
+   } 
+   return true;
+}
+
 
  /*****************************************************************************/
 /** Saves a core mesh instance in a XML file.
@@ -1115,7 +1458,7 @@ bool CalSaver::saveXmlCoreMesh(const std::string& strFilename, CalCoreMesh *pCor
 		submesh.SetAttribute("MATERIAL",pCoreSubmesh->getCoreMaterialThreadId());
 		submesh.SetAttribute("NUMLODSTEPS",pCoreSubmesh->getLodCount());
 		submesh.SetAttribute("NUMSPRINGS",pCoreSubmesh->getSpringCount());
-		
+		submesh.SetAttribute("NUMMORPHS",pCoreSubmesh->getCoreSubMorphTargetCount());
 		submesh.SetAttribute("NUMTEXCOORDS",pCoreSubmesh->getVectorVectorTextureCoordinate().size());
 
 		
@@ -1124,6 +1467,7 @@ bool CalSaver::saveXmlCoreMesh(const std::string& strFilename, CalCoreMesh *pCor
 		std::vector<CalCoreSubmesh::Face>& vectorFace = pCoreSubmesh->getVectorFace();
 		std::vector<CalCoreSubmesh::PhysicalProperty>& vectorPhysicalProperty = pCoreSubmesh->getVectorPhysicalProperty();
 		std::vector<CalCoreSubmesh::Spring>& vectorSpring = pCoreSubmesh->getVectorSpring();
+      std::vector<CalCoreSubMorphTarget *>& vectorMorphs = pCoreSubmesh->getVectorCoreSubMorphTarget();
 
 		// get the texture coordinate vector vector
         std::vector<std::vector<CalCoreSubmesh::TextureCoordinate> >& vectorvectorTextureCoordinate = pCoreSubmesh->getVectorVectorTextureCoordinate();
@@ -1163,6 +1507,18 @@ bool CalSaver::saveXmlCoreMesh(const std::string& strFilename, CalCoreMesh *pCor
 
 			normal.InsertEndChild(normaldata);
 			vertex.InsertEndChild(normal);
+
+         TiXmlElement vertColor("COLOR");
+
+         str.str("");
+         str << Vertex.vertexColor.x << " "
+            << Vertex.vertexColor.y << " "
+            << Vertex.vertexColor.z;
+
+         TiXmlText colordata(str.str());  
+
+         vertColor.InsertEndChild(colordata);
+         vertex.InsertEndChild(vertColor);
 
 			if(Vertex.collapseId!=-1)
 			{
@@ -1261,6 +1617,102 @@ bool CalSaver::saveXmlCoreMesh(const std::string& strFilename, CalCoreMesh *pCor
 			
 			submesh.InsertEndChild(spring);
 		}
+
+      // write all morphs
+      int morphId;
+      for(morphId = 0; morphId < (int)pCoreSubmesh->getCoreSubMorphTargetCount(); ++morphId)
+      {
+         CalCoreSubMorphTarget * morphTarget = vectorMorphs[morphId];
+
+         TiXmlElement morph("MORPH");
+         str.str("");
+         str << morphId;
+
+         morph.SetAttribute("MORPHID", str.str());
+         morph.SetAttribute("NAME", morphTarget->name());
+
+         int morphVertCount = 0;
+         for(int blendId = 0; blendId < morphTarget->getBlendVertexCount(); ++blendId)
+         {
+            CalCoreSubMorphTarget::BlendVertex const * bv = morphTarget->getBlendVertex(blendId);
+            if( !bv ) 
+            {
+               continue;
+            }
+            CalCoreSubmesh::Vertex& Vertex = vectorVertex[blendId];
+            static double differenceTolerance = 1.0;
+            CalVector positionDiff = bv->position - Vertex.position;
+            CalVector normalDiff = bv->normal - Vertex.normal;
+            double positionDiffLength = fabs(positionDiff.length());
+            double normalDiffLength = fabs(normalDiff.length());
+
+            bool skip = false;
+            //                    if( positionDiffLength < differenceTolerance && normalDiffLength < differenceTolerance ) {
+            if( positionDiffLength < differenceTolerance ) 
+            {
+               skip = true;
+            }
+
+            std::vector<CalCoreSubmesh::TextureCoordinate> const & textureCoords = bv->textureCoords;
+            size_t tcI;
+            for( tcI = 0; tcI < textureCoords.size(); tcI++ ) 
+            {
+              CalCoreSubmesh::TextureCoordinate const & tc1 = textureCoords[tcI];
+              CalCoreSubmesh::TextureCoordinate const & tc2 = vectorvectorTextureCoordinate[tcI][blendId];
+              if( fabs(tc1.u - tc2.u) > differenceTolerance ||
+                 fabs(tc1.v - tc2.v) > differenceTolerance )
+              {
+                 skip = false;
+              }
+            }
+
+
+            if(skip) 
+            {
+               continue;
+            }
+            morphVertCount++;
+            TiXmlElement blendVert("BLENDVERTEX");
+            str.str("");
+            str << blendId;
+
+            blendVert.SetAttribute("VERTEXID", str.str());
+            str.str("");
+            str << positionDiffLength;
+            blendVert.SetAttribute("POSDIFF", str.str());
+
+            TiXmlElement pos("POSITION");
+            str.str("");
+            str << bv->position.x << " " << bv->position.y << " " << bv->position.z;
+            TiXmlText posdata(str.str());
+            pos.InsertEndChild(posdata);
+
+            TiXmlElement norm("NORMAL");
+            str.str("");
+            str << bv->normal.x << " " << bv->normal.y << " " << bv->normal.z;
+            TiXmlText normdata(str.str());
+            norm.InsertEndChild(normdata);
+
+            blendVert.InsertEndChild(pos);
+            blendVert.InsertEndChild(norm);
+            for( tcI = 0; tcI < bv->textureCoords.size(); tcI++ ) 
+            {
+               TiXmlElement tcXml("TEXCOORD");
+               str.str("");
+               CalCoreSubmesh::TextureCoordinate const & tc = bv->textureCoords[tcI];
+               str << tc.u << " " << tc.v;
+               TiXmlText tcdata(str.str());
+               tcXml.InsertEndChild(tcdata);
+               blendVert.InsertEndChild(tcXml);
+            }
+
+            morph.InsertEndChild(blendVert);
+         }
+         str.str("");
+         str << morphVertCount;
+         morph.SetAttribute("NUMBLENDVERTS", str.str());
+         submesh.InsertEndChild(morph);
+      }
 
 		// write all faces
 		int faceId;
