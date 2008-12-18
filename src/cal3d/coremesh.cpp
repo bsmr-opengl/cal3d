@@ -207,7 +207,7 @@ int CalCoreMesh::addAsMorphTarget(CalCoreMesh *pCoreMesh, std::string const & mo
   int othernumsubs = pCoreMesh->getCoreSubmeshCount();
   if (m_vectorCoreSubmesh.size() != otherVectorCoreSubmesh.size())
   {
-    CalError::setLastError(CalError::INTERNAL, __FILE__, __LINE__, "This mesh has children with different numbers of materials");
+    CalError::setLastError(CalError::INTERNAL, __FILE__, __LINE__, "This mesh has children with a different numbers of submeshes");
     return -1;
   }
   if (m_vectorCoreSubmesh.size() == 0)
@@ -253,10 +253,13 @@ int CalCoreMesh::addAsMorphTarget(CalCoreMesh *pCoreMesh, std::string const & mo
       blendVertex.normal = (*iteratorVectorVertex).normal;
       blendVertex.textureCoords.clear();
       blendVertex.textureCoords.reserve(textCoordVector.size());
-      for( int tcI = 0; tcI < textCoordVector.size(); tcI++ ) {
+      for( unsigned int tcI = 0; tcI < textCoordVector.size(); tcI++ ) 
+      {
         blendVertex.textureCoords.push_back(textCoordVector[tcI][i]);
       }  
+
       if(!pCalCoreSubMorphTarget->setBlendVertex(i,blendVertex)) return -1;
+
       ++iteratorVectorVertex;
     }
     (*iteratorCoreSubmesh)->addCoreSubMorphTarget(pCalCoreSubMorphTarget);
