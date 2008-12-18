@@ -87,10 +87,12 @@ bool CMaxMesh::Create(INode *pINode, Mesh *pIMesh, TriObject* pTriObjectToDelete
     m_pModifier = FindSkinModifier(pINode);
     if(m_pModifier == 0)
     {
-		theExporter.SetLastError(
-			std::string("No physique/skin modifier found. ") + pINode->GetName(), __FILE__, __LINE__);
-		m_bDelete = false; // to not double delete mesh in dtor
-		return false;
+       m_pModifier = FindMorpherModifier(pINode);
+       if( m_pModifier == 0 ) 
+       {
+          m_modifierType = MODIFIER_NONE;
+       }
+       m_modifierType = MODIFIER_MORPHER;
     }
     else
     {
@@ -170,6 +172,44 @@ Modifier *CMaxMesh::FindPhysiqueModifier(INode *pINode)
 
   return 0;
 }
+
+//----------------------------------------------------------------------------//
+// Find the morpher modifier for a given node                                //
+//----------------------------------------------------------------------------//
+#define MR3_CLASS_ID		Class_ID(0x17bb6854, 0xa5cba2a3)
+
+Modifier *CMaxMesh::FindMorpherModifier(INode *pINode)
+{
+   // get the object reference of the node
+   Object *pObject;
+   pObject = pINode->GetObjectRef();
+   if(pObject == 0) return 0;
+
+   // loop through all derived objects
+   while(pObject->SuperClassID() == GEN_DERIVOB_CLASS_ID)
+   {
+      IDerivedObject *pDerivedObject;
+      pDerivedObject = static_cast<IDerivedObject *>(pObject);
+
+      // loop through all modifiers
+      int stackId;
+      for(stackId = 0; stackId < pDerivedObject->NumModifiers(); stackId++)
+      {
+         // get the modifier
+         Modifier *pModifier;
+         pModifier = pDerivedObject->GetModifier(stackId);
+
+         // check if we found the physique modifier
+         if(pModifier->ClassID() == MR3_CLASS_ID) return pModifier;
+      }
+
+      // continue with next derived object
+      pObject = pDerivedObject->GetObjRef();
+   }
+
+   return 0;
+}
+
 
 //----------------------------------------------------------------------------//
 // Find the skin modifier for a given node                                    //
@@ -372,7 +412,7 @@ int CMaxMesh::GetSubmeshMaterialThreadId(int submeshId)
 CVertexCandidate *CMaxMesh::GetVertexCandidate(CSkeletonCandidate *pSkeletonCandidate, int faceId, int faceVertexId)
 {
   // check for valid mesh and physique modifier
-  if((m_pIMesh == 0) || (m_pModifier == 0))
+  if((m_pIMesh == 0))
   {
     theExporter.SetLastError("Invalid handle.", __FILE__, __LINE__);
     return 0;
@@ -411,7 +451,8 @@ CVertexCandidate *CMaxMesh::GetVertexCandidate(CSkeletonCandidate *pSkeletonCand
 
   // set the vertex candidate position
   pVertexCandidate->SetPosition(vertex.x, vertex.y, vertex.z);
- 
+  pVertexCandidate->SetUniqueId(vertexId);
+
   // get the absolute vertex normal
   Point3 normal;
   normal = GetVertexNormal(faceId, vertexId);
@@ -423,6 +464,14 @@ CVertexCandidate *CMaxMesh::GetVertexCandidate(CSkeletonCandidate *pSkeletonCand
 
   // set the vertex candidate normal
   pVertexCandidate->SetNormal(normal.x, normal.y, normal.z);
+
+  if(m_pIMesh->numCVerts > 0)
+  { 
+     VertColor vc;
+     vc = m_pIMesh->vertCol[m_pIMesh->vcFace[faceId].t[faceVertexId]];
+     CalVector vcCal(vc.x, vc.y, vc.z);
+     pVertexCandidate->SetVertColor(vcCal);
+  }  
 
   // get the vertex weight array
   float *pVertexWeights;
@@ -653,9 +702,12 @@ CVertexCandidate *CMaxMesh::GetVertexCandidate(CSkeletonCandidate *pSkeletonCand
     m_pModifier->ReleaseInterface(I_SKIN, pSkin);
   }
 #endif
+  else if( m_modifierType == MODIFIER_MORPHER || m_modifierType == MODIFIER_NONE ) 
+  {
+  }
   else
   {
-    theExporter.SetLastError("No physique/skin modifier found.", __FILE__, __LINE__);
+    theExporter.SetLastError("No physique/skin/morpher modifier found.", __FILE__, __LINE__);
     return 0;
   }
 

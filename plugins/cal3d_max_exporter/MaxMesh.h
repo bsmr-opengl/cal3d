@@ -29,6 +29,7 @@ public:
 	{
 		MODIFIER_NONE,
 		MODIFIER_SKIN,
+      MODIFIER_MORPHER,
 		MODIFIER_PHYSIQUE
 	} ModifierType;
 
@@ -69,6 +70,7 @@ protected:
 	bool CreateMaterial(Mtl *pMtl);
 	Modifier *FindPhysiqueModifier(INode *pINode);
 	Modifier *FindSkinModifier(INode *pINode);
+   Modifier *FindMorpherModifier(INode *pINode);
 	Point3 GetVertexNormal(int faceId, int vertexId);
 	Matrix3 Transpose(Matrix3& matrix);
 };
