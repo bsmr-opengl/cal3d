@@ -64,6 +64,8 @@ public:
 	int GetSubmeshMapCount(int submeshId);
 	int GetSubmeshMaterialThreadId(int submeshId);
 	CVertexCandidate *GetVertexCandidate(CSkeletonCandidate *pSkeletonCandidate, int faceId, int faceVertexId);
+   int numMorphChannels();
+   MorphKeyFrame frameForChannel( int i, float time );
 
 protected:
 	bool AddBoneInfluence(CSkeletonCandidate *pSkeletonCandidate, CVertexCandidate *pVertexCandidate, INode *pNode, float weight);

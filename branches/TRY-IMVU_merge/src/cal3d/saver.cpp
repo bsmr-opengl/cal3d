@@ -16,6 +16,7 @@
 // Includes                                                                   //
 //****************************************************************************//
 
+#include "cal3d/loader.h"
 #include "cal3d/saver.h"
 #include "cal3d/error.h"
 #include "cal3d/vector.h"
@@ -75,10 +76,23 @@ bool CalSaver::saveCoreAnimation(const std::string& strFilename, CalCoreAnimatio
   }
 
   // write version info
-  if(!CalPlatform::writeInteger(file, Cal::CURRENT_FILE_VERSION))
+  int version = Cal::CURRENT_FILE_VERSION;
+  if(!CalPlatform::writeInteger(file, version))
   {
     CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
     return false;
+  }
+
+  // write whether we're going to use compression.
+  bool useCompression = false;    // Default to off!  It causes many long animations to get mangled.
+  if (Cal::versionHasCompressionFlag(Cal::CURRENT_FILE_VERSION)) 
+  {
+     int useCompressionFlag = useCompression;
+     if (!CalPlatform::writeInteger(file, useCompressionFlag)) 
+     {
+        CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+        return false;
+     }
   }
 
   // write the duration of the core animation
@@ -117,7 +131,7 @@ bool CalSaver::saveCoreAnimation(const std::string& strFilename, CalCoreAnimatio
   for(iteratorCoreTrack = listCoreTrack.begin(); iteratorCoreTrack != listCoreTrack.end(); ++iteratorCoreTrack)
   {
     // save core track
-    if(!saveCoreTrack(file, strFilename, *iteratorCoreTrack, pOptions))
+    if(!saveCoreTrack(file, strFilename, *iteratorCoreTrack, version, pOptions))
     {
       return false;
     }
@@ -276,6 +290,15 @@ bool CalSaver::saveCoreBones(std::ofstream& file, const std::string& strFilename
     return false;
   }
 
+  // write lighting data
+  CalPlatform::writeInteger(file, pCoreBone->getLightType());
+  CalVector c;
+  pCoreBone->getLightColor( c );
+  CalPlatform::writeFloat(file, c.x);
+  CalPlatform::writeFloat(file, c.y);
+  CalPlatform::writeFloat(file, c.z);
+
+
   // get children list
   std::list<int>& listChildId = pCoreBone->getListChildId();
 
@@ -316,7 +339,8 @@ bool CalSaver::saveCoreBones(std::ofstream& file, const std::string& strFilename
   *         \li \b false if an error happened
   *****************************************************************************/
 
-bool CalSaver::saveCoreKeyframe(std::ofstream& file, const std::string& strFilename, CalCoreKeyframe *pCoreKeyframe)
+bool CalSaver::saveCoreKeyframe(std::ofstream& file, const std::string& strFilename, CalCoreKeyframe *pCoreKeyframe,
+                                int version, bool translationWritten, bool highRangeRequired, bool useAnimationCompression)
 {
   if(!file)
   {
@@ -324,21 +348,58 @@ bool CalSaver::saveCoreKeyframe(std::ofstream& file, const std::string& strFilen
     return false;
   }
 
-  // write the time of the keyframe
-  CalPlatform::writeFloat(file, pCoreKeyframe->getTime());
-
-  // write the translation of the keyframe
   const CalVector& translation = pCoreKeyframe->getTranslation();
-  CalPlatform::writeFloat(file, translation[0]);
-  CalPlatform::writeFloat(file, translation[1]);
-  CalPlatform::writeFloat(file, translation[2]);
-
-  // write the rotation of the keyframe
   const CalQuaternion& rotation = pCoreKeyframe->getRotation();
-  CalPlatform::writeFloat(file, rotation[0]);
-  CalPlatform::writeFloat(file, rotation[1]);
-  CalPlatform::writeFloat(file, rotation[2]);
-  CalPlatform::writeFloat(file, rotation[3]);
+  float caltime = pCoreKeyframe->getTime();
+
+  if (useAnimationCompression) 
+  {
+     unsigned char buf[ 100 ];
+     unsigned int bytesWritten = CalLoader::writeCompressedKeyframe( buf, 100, strFilename, 
+        translation, rotation, caltime, 
+        version, translationWritten, highRangeRequired );
+
+     if( bytesWritten == 0 ) return false;
+
+     CalPlatform::writeBytes( file, buf, bytesWritten );
+     if(version < Cal::FIRST_FILE_VERSION_WITH_ANIMATION_COMPRESSION6 ) 
+     {
+        if(version >= Cal::FIRST_FILE_VERSION_WITH_ANIMATION_COMPRESSION4 ) 
+        {
+           if( version >= Cal::FIRST_FILE_VERSION_WITH_ANIMATION_COMPRESSION5 ) 
+           {
+              if( translationWritten ) 
+              {
+                 CalPlatform::writeFloat(file, translation[0]);
+                 CalPlatform::writeFloat(file, translation[1]);
+                 CalPlatform::writeFloat(file, translation[2]);
+              }
+           }
+
+           // write the rotation of the keyframe
+           CalPlatform::writeFloat(file, rotation[0]);
+           CalPlatform::writeFloat(file, rotation[1]);
+           CalPlatform::writeFloat(file, rotation[2]);
+           CalPlatform::writeFloat(file, rotation[3]);
+        }
+     }
+  }
+  else
+  {
+     // write the time of the keyframe
+     CalPlatform::writeFloat(file, caltime);
+
+     // write the translation of the keyframe
+     CalPlatform::writeFloat(file, translation[0]);
+     CalPlatform::writeFloat(file, translation[1]);
+     CalPlatform::writeFloat(file, translation[2]);
+
+     // write the rotation of the keyframe
+     CalPlatform::writeFloat(file, rotation[0]);
+     CalPlatform::writeFloat(file, rotation[1]);
+     CalPlatform::writeFloat(file, rotation[2]);
+     CalPlatform::writeFloat(file, rotation[3]);
+  }
 
   // check if an error happened
   if(!file)
@@ -528,7 +589,13 @@ bool CalSaver::saveCoreMaterial(const std::string& strFilename, CalCoreMaterial 
     CalCoreMaterial::Map& map = vectorMap[mapId];
 
     // write the filename of the map
-    if(!CalPlatform::writeString(file, map.strFilename))
+    bool ret = CalPlatform::writeString(file, map.strFilename);
+    if( ret ) 
+    {
+       ret = CalPlatform::writeString(file, map.mapType);
+    }
+
+    if(!ret)
     {
       CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
       return false;
@@ -662,6 +729,13 @@ bool CalSaver::saveCoreSkeleton(const std::string& strFilename, CalCoreSkeleton 
     CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
     return false;
   }
+
+  // write the sceneambient
+  CalVector sceneColor;
+  pCoreSkeleton->getSceneAmbientColor(sceneColor);
+  CalPlatform::writeFloat(file, sceneColor.x);
+  CalPlatform::writeFloat(file, sceneColor.y);
+  CalPlatform::writeFloat(file, sceneColor.z);
 
   // write all core bones
   int boneId;
@@ -939,7 +1013,7 @@ bool CalSaver::saveCoreSubmesh(std::ofstream& file, const std::string& strFilena
   *         \li \b false if an error happened
   *****************************************************************************/
 
-bool CalSaver::saveCoreTrack(std::ofstream& file, const std::string& strFilename, CalCoreTrack *pCoreTrack, CalSaverAnimationOptions *pOptions)
+bool CalSaver::saveCoreTrack(std::ofstream& file, const std::string& strFilename, CalCoreTrack *pCoreTrack,  int version, CalSaverAnimationOptions *pOptions)
 {
   if(!file)
   {
@@ -947,88 +1021,70 @@ bool CalSaver::saveCoreTrack(std::ofstream& file, const std::string& strFilename
     return false;
   }
 
+  // Always save out the flags, and save out the translation iff required.
+  // I calculate translation required on load, and just fetch the saved result upon save.
+  bool translationRequired = pCoreTrack->getTranslationRequired();
+  bool highRangeRequired = pCoreTrack->getHighRangeRequired();
+  bool translationIsDynamic = pCoreTrack->getTranslationIsDynamic();
+
   // write the bone id
-  if(!CalPlatform::writeInteger(file, pCoreTrack->getCoreBoneId()))
+  const bool useAnimationCompression = (pOptions && pOptions->bCompressKeyframes);
+
+  if ( useAnimationCompression )
   {
-    CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
-    return false;
+     int coreBoneId = pCoreTrack->getCoreBoneId();
+     int numKeyframes = pCoreTrack->getCoreKeyframeCount();
+     unsigned char buf[ 4 ];
+     buf[ 0 ] = coreBoneId & 0xff;
+     buf[ 1 ] = ( ( coreBoneId >> 8 ) & 0x1f ) 
+        + ( translationRequired ? 0x80 : 0 )
+        + ( highRangeRequired ? 0x40 : 0 )
+        + ( translationIsDynamic ? 0x20 : 0 );
+     buf[ 2 ] = numKeyframes & 0xff;
+     buf[ 3 ] = ( numKeyframes >> 8 ) & 0xff;
+
+     if( !CalPlatform::writeBytes( file, buf, 4 ) ) 
+     {
+        CalError::setLastError(CalError::INVALID_FILE_FORMAT, __FILE__, __LINE__);
+        return false;
+     }
+  } 
+  else
+  {
+     // write the bone id
+     if(!CalPlatform::writeInteger(file, pCoreTrack->getCoreBoneId()))
+     {
+        CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+        return false;
+     }
+
+     // write the number of keyframes
+     if(!CalPlatform::writeInteger(file, pCoreTrack->getCoreKeyframeCount()))
+     {
+        CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
+        return false;
+     }
   }
 
-  // write the number of keyframes
-  if(!CalPlatform::writeInteger(file, pCoreTrack->getCoreKeyframeCount()))
-  {
-    CalError::setLastError(CalError::FILE_WRITING_FAILED, __FILE__, __LINE__, strFilename);
-    return false;
-  }
-
-	if(pOptions && pOptions->bCompressKeyframes == true) {
-
-		CalVector minp(FLT_MAX, FLT_MAX, FLT_MAX);
-		CalVector maxp(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-
-		int nbKeys = pCoreTrack->getCoreKeyframeCount();
-		for(int i = 0; i < nbKeys; i++) {
-			CalCoreKeyframe *kf = pCoreTrack->getCoreKeyframe(i);
-			const CalVector &pos = kf->getTranslation();
-
-			if(pos.x < minp.x)
-				minp.x = pos.x;
-			if(pos.x > maxp.x)
-				maxp.x = pos.x;
-
-			if(pos.y < minp.y)
-				minp.y = pos.y;
-			if(pos.y > maxp.y)
-				maxp.y = pos.y;
-
-			if(pos.z < minp.z)
-				minp.z = pos.z;
-			if(pos.z > maxp.z)
-				maxp.z = pos.z;
-		}
-
-		float dx = maxp.x - minp.x;
-		float dy = maxp.y - minp.y;
-		float dz = maxp.z - minp.z;
-
-		float factorx = 0, factory = 0, factorz = 0;
-		if(dx != 0)
-			factorx = 1.0f / dx * 2047.0f;
-
-		if(dy != 0)
-			factory = 1.0f / dy * 2047.0f;
-
-		if(dz != 0)
-			factorz = 1.0f / dz * 1023.0f;
-
-		pOptions->keyframe_min = minp;
-		pOptions->keyframe_scale = CalVector(factorx, factory, factorz);
-
-		CalPlatform::writeFloat(file, minp.x);
-		CalPlatform::writeFloat(file, minp.y);
-		CalPlatform::writeFloat(file, minp.z);
-		CalPlatform::writeFloat(file, 1.0f / 2047 * dx);
-		CalPlatform::writeFloat(file, 1.0f / 2047 * dy);
-		CalPlatform::writeFloat(file, 1.0f / 1023 * dz);
-	}
 
   // save all core keyframes
   for(int i = 0; i < pCoreTrack->getCoreKeyframeCount(); ++i)
   {
-    // save the core keyframe
-		bool res;
-		if(pOptions && pOptions->bCompressKeyframes)
-		{
-			res = saveCompressedCoreKeyframe(file, strFilename, pCoreTrack->getCoreKeyframe(i), pOptions);
-		}
-		else 
-		{
-			res = saveCoreKeyframe(file, strFilename, pCoreTrack->getCoreKeyframe(i));
-		}
+     // If translationRequired is false, then I don't need the the translation, but even if it is true,
+     // if translationIsDynamic is false then I don't need translation for any frames but the first.
+     bool translationWritten = translationRequired;
 
-		if(!res) {
-      return false;
-    }
+     if( i != 0 && !translationIsDynamic ) 
+     {
+        translationWritten = false;
+     }
+
+     if(!saveCoreKeyframe(file, strFilename, pCoreTrack->getCoreKeyframe(i), version,
+                          translationWritten, highRangeRequired, useAnimationCompression))
+     {
+        return false;
+     }
+
   }
 
   return true;
@@ -1113,6 +1169,10 @@ bool CalSaver::saveXmlCoreSkeleton(const std::string& strFilename, CalCoreSkelet
 
   skeleton.SetAttribute("NUMBONES",pCoreSkeleton->getVectorCoreBone().size());
   
+  CalVector sceneColor;
+  pCoreSkeleton->getSceneAmbientColor(sceneColor);
+  str << sceneColor.x << " " << sceneColor.y << " " << sceneColor.z;
+  skeleton.SetAttribute("SCENEAMBIENTCOLOR", str.str());
 
 
   int boneId;
@@ -1124,6 +1184,16 @@ bool CalSaver::saveXmlCoreSkeleton(const std::string& strFilename, CalCoreSkelet
 	  bone.SetAttribute("ID",boneId);
 	  bone.SetAttribute("NAME",pCoreBone->getName());
 	  bone.SetAttribute("NUMCHILDS",pCoreBone->getListChildId().size());
+
+     if( pCoreBone->hasLightingData() ) 
+     {
+        bone.SetAttribute("LIGHTTYPE",pCoreBone->getLightType());
+        str.str("");
+        CalVector c;
+        pCoreBone->getLightColor( c );
+        str << c.x << " " << c.y << " " << c.z;
+        bone.SetAttribute("LIGHTCOLOR",str.str());
+     }
 
 	  TiXmlElement translation("TRANSLATION");
 	  const CalVector& translationVector = pCoreBone->getTranslation();
@@ -1262,6 +1332,13 @@ bool CalSaver::saveXmlCoreAnimation(const std::string& strFilename, CalCoreAnima
 		TiXmlElement track("TRACK");
 		track.SetAttribute("BONEID",pCoreTrack->getCoreBoneId());
 
+      // Always save out the TRANSLATIONREQUIRED flag in XML, and save the translations iff the flag is true.
+      bool translationIsDynamic = pCoreTrack->getTranslationIsDynamic();
+      // translationIsDynamic = true;
+      track.SetAttribute( "TRANSLATIONREQUIRED", ( pCoreTrack->getTranslationRequired() ? 1 : 0 ) );
+      track.SetAttribute( "TRANSLATIONISDYNAMIC", ( translationIsDynamic ? 1 : 0 ) );
+      track.SetAttribute( "HIGHRANGEREQUIRED", ( pCoreTrack->getHighRangeRequired() ? 1 : 0 ) );  
+
 		track.SetAttribute("NUMKEYFRAMES",pCoreTrack->getCoreKeyframeCount());
 
 		// save all core keyframes
@@ -1274,19 +1351,26 @@ bool CalSaver::saveXmlCoreAnimation(const std::string& strFilename, CalCoreAnima
 			str.str("");
 			str << pCoreKeyframe->getTime();	        
 			keyframe.SetAttribute("TIME",str.str());
+         
+         if( pCoreTrack->getTranslationRequired() ) 
+         {
+            // If translation required but not dynamic and i != 0, then I won't write the translation.
+            if( translationIsDynamic || i == 0 ) 
+            {
+               TiXmlElement translation("TRANSLATION");
+               const CalVector& translationVector = pCoreKeyframe->getTranslation();
 
-			TiXmlElement translation("TRANSLATION");
-			const CalVector& translationVector = pCoreKeyframe->getTranslation();
+               str.str("");
+               str << translationVector.x << " "
+                  << translationVector.y << " "
+                  << translationVector.z;
 
-			str.str("");
-			str << translationVector.x << " "
-				<< translationVector.y << " "
-				<< translationVector.z;
+               TiXmlText translationdata(str.str());  
 
-			TiXmlText translationdata(str.str());  
-
-			translation.InsertEndChild(translationdata);
-			keyframe.InsertEndChild(translation);
+               translation.InsertEndChild(translationdata);
+               keyframe.InsertEndChild(translation);
+            }
+         }
 
 			TiXmlElement rotation("ROTATION");
 			const CalQuaternion& rotationQuad = pCoreKeyframe->getRotation();  
@@ -1841,6 +1925,7 @@ bool CalSaver::saveXmlCoreMaterial(const std::string& strFilename, CalCoreMateri
   for(mapId = 0; mapId < (int)vectorMap.size(); ++mapId)
   {
 	  TiXmlElement map("MAP");
+     map.SetAttribute("TYPE",vectorMap[mapId].mapType);
 	  TiXmlText mapdata(vectorMap[mapId].strFilename);
 	  map.InsertEndChild(mapdata);
       material.InsertEndChild(map);

@@ -20,6 +20,7 @@
 #include "VertexCandidate.h"
 #include "max2ogl.h"
 
+#include <wm3.h>
 
 CMaxMesh::CMaxMesh()
 {
@@ -176,10 +177,14 @@ Modifier *CMaxMesh::FindPhysiqueModifier(INode *pINode)
 //----------------------------------------------------------------------------//
 // Find the morpher modifier for a given node                                //
 //----------------------------------------------------------------------------//
-#define MR3_CLASS_ID		Class_ID(0x17bb6854, 0xa5cba2a3)
 
 Modifier *CMaxMesh::FindMorpherModifier(INode *pINode)
 {
+   if (!pINode)
+   {
+      return 0;
+   }
+
    // get the object reference of the node
    Object *pObject;
    pObject = pINode->GetObjectRef();
@@ -198,9 +203,11 @@ Modifier *CMaxMesh::FindMorpherModifier(INode *pINode)
          // get the modifier
          Modifier *pModifier;
          pModifier = pDerivedObject->GetModifier(stackId);
-
-         // check if we found the physique modifier
-         if(pModifier->ClassID() == MR3_CLASS_ID) return pModifier;
+         if (pModifier)
+         {
+            // check if we found the physique modifier
+            if(pModifier->ClassID() == Class_ID(MR3_CLASS_ID)) return pModifier;
+         }
       }
 
       // continue with next derived object
@@ -795,5 +802,41 @@ Matrix3 CMaxMesh::Transpose(Matrix3& matrix)
 
   return transposeMatrix;
 }
+
+int CMaxMesh::numMorphChannels()
+{
+   MorphR3 * morpherModifier = (MorphR3*)FindMorpherModifier(m_pINode);
+   if( !morpherModifier ) 
+   {
+      return 0;
+   }
+
+   int activeCount = 0;
+   for( unsigned int i = 0; i < morpherModifier->chanBank.size(); i++ ) 
+   {
+      morphChannel const & chanI = morpherModifier->chanBank[i];
+      if( chanI.mActive ) 
+      {
+         activeCount++;
+      }
+   }
+   return activeCount;
+}
+
+
+CBaseMesh::MorphKeyFrame CMaxMesh::frameForChannel( int i, float timeIn )
+{
+   TimeValue time = SecToTicks(timeIn);
+   MorphR3 * morpherModifier = (MorphR3*)FindMorpherModifier(m_pINode);
+   morphChannel const & chanI = morpherModifier->chanBank[i];
+   CBaseMesh::MorphKeyFrame frame;
+   frame.name = chanI.mName.data();
+   frame.time = timeIn;
+   Interval valid=FOREVER;
+   chanI.cblock->GetValue(0, time, frame.weight, valid);
+   frame.totalWeight = chanI.mTargetPercent;
+   return frame;
+}
+
 
 //----------------------------------------------------------------------------//
