@@ -294,8 +294,10 @@ bool CMeshCandidate::Create(CBaseNode* _basenode, CSkeletonCandidate *pSkeletonC
 	Clear();
 
 	//Directly set the meshnode into the mesh candidate
+   m_pNode = _basenode;
+
 	// get the mesh
-	CBaseMesh* mesh = theExporter.GetInterface()->GetMesh(_basenode);
+	CBaseMesh* mesh = theExporter.GetInterface()->GetMesh(m_pNode);
 	if(mesh == 0) return false;
 
         m_meshes.push_back(mesh);
