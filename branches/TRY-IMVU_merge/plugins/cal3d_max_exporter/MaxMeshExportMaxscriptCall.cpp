@@ -214,6 +214,9 @@ bool CMaxInterface::ExportMeshFromMaxscriptCall(const std::string& strFilename, 
 				CalVector normal;
 				pVertexCandidate->GetNormal(vertex.normal);
 
+        // set the vert color
+        pVertexCandidate->GetVertColor(vertex.vertexColor);
+
 				// set the collapse id
 				vertex.collapseId = pVertexCandidate->GetCollapseId();
 
