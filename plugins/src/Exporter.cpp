@@ -266,6 +266,23 @@ OutputDebugString(str);
    }
 	}
 
+  for(boneCandidateId = 0; boneCandidateId < vectorBoneCandidate.size(); boneCandidateId++)
+  {
+     CBoneCandidate *pBoneCandidate;
+     pBoneCandidate = vectorBoneCandidate[boneCandidateId];
+     CalCoreTrack *pCoreTrack;
+     pCoreTrack = coreAnimation->getCoreTrack(pBoneCandidate->GetId());
+     static bool useCompression = true;
+     static double translationTolerance = 0.25;
+     static double rotationToleranceDegrees = 0.1;
+     // there is no pCoreTrack for bones that are deselected
+     if( pCoreTrack && useCompression ) 
+     {
+        CalCoreSkeleton * skelOrNull = skeletonCandidate.GetCoreSkeleton();
+        pCoreTrack->compress(translationTolerance, rotationToleranceDegrees, skelOrNull );
+     }
+  }
+
 	// stop the progress info
 	theExporter.GetInterface()->StopProgressInfo();
 
@@ -529,6 +546,7 @@ bool CExporter::ExportMaterial(const std::string& strFilename)
 
     // set map data
     map.strFilename = vectorMap[mapId].strFilename;
+    map.mapType = vectorMap[mapId].mapType;
 
     // set map in the core material instance
     coreMaterial->setMap(mapId, map);
@@ -840,6 +858,10 @@ bool CExporter::ExportSkeleton(const std::string& strFilename)
   // get bone candidate vector
   std::vector<CBoneCandidate *> vectorBoneCandidate = skeletonCandidate.GetVectorBoneCandidate();
 
+  CalVector sceneAmbientColor;
+  m_pInterface->GetAmbientLight( sceneAmbientColor );
+  coreSkeleton->setSceneAmbientColor( sceneAmbientColor );
+
   // start the progress info
   m_pInterface->StartProgressInfo("Exporting to skeleton file...");
 
@@ -886,6 +908,12 @@ bool CExporter::ExportSkeleton(const std::string& strFilename)
 
       // set the core skeleton of the core bone instance
       pCoreBone->setCoreSkeleton(coreSkeleton.get());
+
+      CBaseNode * pBoneNode = pBoneCandidate->GetNode();
+      pCoreBone->setLightType( pBoneNode->GetLightType() );
+      CalVector color;
+      pBoneNode->GetLightColor( color );
+      pCoreBone->setLightColor( color );
 
       // add the core bone to the core skeleton instance
       int boneId;
